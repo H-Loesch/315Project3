@@ -70,6 +70,13 @@ public class Test1 extends Application {
 		        	}
 		        });
 		        
+		        working_pit.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+		        	@Override public void handle(MouseEvent event) { 
+		        		//handle the pit being clicked on. Validate move, do a move... whatever, that's not my problem right now.
+		        		working_pit.setFill(Color.BISQUE);
+		        	}
+		        });
+		        
 			}
 		}
 		return working;
