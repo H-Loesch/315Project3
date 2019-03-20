@@ -3,20 +3,24 @@ package mancala;
 import java.util.Vector;
 
 import javafx.application.Application;
-import javafx.fxml.JavaFXBuilderFactory;
-import javafx.scene.Group;
+import javafx.event.EventHandler;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
-import mancala.Pit;
+
 
 //decent widthfor each pit is about 3 mouse cursors wide. So that's about 100 pixels each. 
 //TODO find some way to center the mancala board regardless of the windows' size?
 //TODO add stones
 //TODO add stores
+
+/* Set each node in the graph to have an ID that consists of a label followed by a space and a number.
+ * Then we can split by space, and take the last element of that, convert it to a number, access that element of the vector for that object
+ * So... in the event handler for pit 4, we can go from the pit4 javafx object, to the 4th pit object, and do things with that.
+ * This is extremely janky I think. I can't really be sure, unfortunately. 
+ */
 
 public class Test1 extends Application {
 	Vector<Pit> pits = initializePits();
@@ -32,7 +36,8 @@ public class Test1 extends Application {
 		canvas.setPrefSize(1080, 720);
 		canvas.setStyle("-fx-background-color: burlywood;");
 		pits = initializePits();
-		canvas.getChildren().addAll(placeInitialShapes(pits));
+		canvas.getChildren().addAll(pits);
+		//canvas.getChildren().addAll(placeInitialShapes(pits));
 		primary.setScene(new Scene(canvas)); //sets stage to show the scene
  		primary.show(); //shows the scene in the newly-created application
 	}
@@ -41,23 +46,31 @@ public class Test1 extends Application {
 		//initialize location, all that for the pits. 
 		//don't yet initialize the stones that will go in them. Or maybe do, idk.
 		Vector<Pit> working = new Vector<Pit>();
-		for (int i = 1; i < 7; i++) {
-			for (int j = 1; j < 3; j++) {
-				Pit working_pit = new Pit(j, 85 + 130 * i, 120 + 140 * j, i * j);
+		/* 7 8 9 10 11 12
+		   1 2 3 4  5  6 */
+		for (int j = 1; j < 3; j++) {
+			for (int i = 1; i < 7; i++) {
+				Pit working_pit = new Pit(85 + 130 * i, 120 + 140 * j, i * j, j);
+				working_pit.setFill(j == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
 				working.add(working_pit);
+				
+
+		        working_pit.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
+		        	@Override public void handle(MouseEvent event) {
+		        		working_pit.setFill(Color.DARKRED);
+		        		//something something create a text box above the pit when mouse is over it
+		        		//set the ID to something specific so that the mouse_exited item can remove it. 
+		        	}
+		        });
+		        
+		        working_pit.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
+		        	@Override public void handle(MouseEvent event) {
+		        		working_pit.setFill(Color.AQUA);
+		        		//destroy the object created when the mouse entered this pit
+		        	}
+		        });
+		        
 			}
-		}
-		return working;
-	}
-	
-	//take in vector of pits, return vector of shapes
-	private Vector<javafx.scene.Node> placeInitialShapes(Vector<Pit> _pits) {
-		//set up all the shapes required for the gameboard: pits, stores, initial stone placements, etc.
-		Vector<javafx.scene.Node> working = new Vector<javafx.scene.Node>();
-		for (int i = 0; i < 12; i++) {
-			Circle temp = new Circle(_pits.get(i).x_location, _pits.get(i).y_location, 60);
-			temp.setFill(Color.SADDLEBROWN);
-			working.add(temp);
 		}
 		return working;
 	}
