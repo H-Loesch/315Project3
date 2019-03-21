@@ -38,13 +38,13 @@ public class GameManager {
 	void move(int selection, int player) {  //returns true after legal move made, returns false on illegal move
 		
 		int grabbed = board[selection];
+		board[selection] = 0;		//remove marbles from pit
 		int move = selection + 1; //move is next pit
+		int marblesWon;
 		
 		//player's move
 		if(player == 0) {
-			board[selection] = 0;		//remove marbles from pit
-			
-			while(grabbed < 0) { //while marbles left
+			while(grabbed > 0) { //while marbles left
 				if(move == 7) {
 					move += 1;			//skip AI's kala
 				}
@@ -56,29 +56,37 @@ public class GameManager {
 			if(move == 0) { //landed in kala, go again
 				
 			}
-			else { //need to check if on ur side
-				if(board[move] == 0) { //empty pit, take opposing team's pit
-					
+			else {
+				if(move < 7) {  //on your side
+					if(board[move] == 0) { //empty pit
+						marblesWon = board[14 - move] + 1; //opposing pit plus capturing marble
+						board[14-move] = 0;				//set gathered pit's marble to 0
+						board[move] = 0;
+						board[0] += marblesWon;   		//adds marbles won to player's kala
+					}
 				}
 			}
 		}
 		
 		//AI's move
 		else {
-			board[selection] = 0;		//remove marbles from pit
-			
-			while(grabbed < 0) { //while marbles left
+			while(grabbed > 0) { //while marbles left
 				if(move > 13)  				//only move on your side
 					move = 1;				//skip player's kala
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
 			}
-			if(move == 0) { //landed in kala, go again
+			if(move == 7) { //landed in kala, go again
 				
 			}
-			else {    //need to check if on ur side
-				if(board[move] == 0) { //empty pit, take opposing team's pit
-					
+			else { 
+				if(move > 7) {  //on your side
+					if(board[move] == 0) { //empty pit
+						marblesWon = board[14 - move] + 1; //opposing pit plus capturing marble
+						board[14-move] = 0;				//set gathered pit's marble to 0
+						board[move] = 0;
+						board[0] += marblesWon;   		//adds marbles won to player's kala
+					}
 				}
 			}
 		}
