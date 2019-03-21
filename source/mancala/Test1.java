@@ -7,7 +7,10 @@ import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 
@@ -35,14 +38,17 @@ public class Test1 extends Application {
 		Pane root = new Pane();
 		root.setPrefSize(1080, 720);
 		root.setStyle("-fx-background-color: burlywood;");
-		pits = initializePits(root);
+		
+		GameManager gm = new GameManager();
+		pits = initializePits(root, gm);
 		root.getChildren().addAll(pits);
+		
 		//canvas.getChildren().addAll(placeInitialShapes(pits));
 		primary.setScene(new Scene(root)); //sets stage to show the scene
  		primary.show(); //shows the scene in the newly-created application
 	}
 	
-	private Vector<Pit> initializePits(Pane root) {
+	private Vector<Pit> initializePits(Pane root, GameManager gm) {
 		//initialize location, all that for the pits. 
 		//don't yet initialize the stones that will go in them. Or maybe do, idk.
 		Vector<Pit> working = new Vector<Pit>();
@@ -58,11 +64,19 @@ public class Test1 extends Application {
 				//These could... probably be moved to the constructor for pits, maybe?
 		        working_pit.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
 		        	@Override public void handle(MouseEvent event) {
-		        		javafx.scene.shape.Rectangle size_label = new javafx.scene.shape.Rectangle(working_pit.getCenterX() - 22.5, working_pit.getCenterY() -90, 45, 35);
+		        		//create new stack pane for the box, since these automatically center things
+		        		StackPane text_box = new StackPane();
+		        		text_box.setLayoutX(working_pit.getCenterX() - 22.5);
+		        		text_box.setLayoutY(working_pit.getCenterY() - 90);
+		        		text_box.setId("temp_box");
+
+		        		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
+		        		size_label.setFill(Color.RED);
+		        		Text number = new Text(Integer.toString(gm.board[working_pit.place]));
+		        		
+		        		text_box.getChildren().addAll(size_label, number);
 		        		size_label.setId("temp");
-		        		size_label.setFill(Color.BLACK);
-		        		root.getChildren().add(size_label);
-		        		working_pit.setFill(Color.DARKRED);
+		        		root.getChildren().add(text_box);
 		        		//something something create a text box above the pit when mouse is over it
 		        		//set the ID to something specific so that the mouse_exited item can remove it. 
 		        	}
@@ -70,9 +84,8 @@ public class Test1 extends Application {
 		        
 		        working_pit.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
 		        	@Override public void handle(MouseEvent event) {
-		        		javafx.scene.Node size_label = root.lookup("#temp");
+		        		javafx.scene.Node size_label = root.lookup("#temp_box");
 		        		root.getChildren().remove(size_label);
-		        		working_pit.setFill(Color.AQUA);
 		        		//destroy the object created when the mouse entered this pit
 		        	}
 		        });
@@ -81,6 +94,7 @@ public class Test1 extends Application {
 		        	@Override public void handle(MouseEvent event) { 
 		        		//handle the pit being clicked on. Validate move, do a move... whatever, that's not my problem right now.
 		        		working_pit.setFill(Color.BISQUE);
+		        		gm.move(working_pit.place, 1);
 		        	}
 		        });
 		        
