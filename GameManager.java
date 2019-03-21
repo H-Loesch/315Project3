@@ -90,7 +90,7 @@ public class GameManager {
 					move += 1;			//skip AI's kala
 				}
 				if(move > 13)  				//start over
-					move = 1;
+					move = 0;
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
 			}
@@ -176,7 +176,7 @@ public class GameManager {
 	
 	boolean winner() { //0 player 1 AI
 		System.out.println("Player 1's score: " + board[0]);
-		System.out.println("Player 2's score: " + board[7]);
+		System.out.println("AI's score: " + board[7]);
 		return (board[7] > board[0]);
 	}
 	
