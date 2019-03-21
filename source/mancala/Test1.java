@@ -3,6 +3,7 @@ package mancala;
 import java.util.Vector;
 
 import javafx.application.Application;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.Scene;
@@ -27,6 +28,7 @@ import javafx.stage.Stage;
 
 public class Test1 extends Application {
 	Vector<Pit> pits;
+	Vector<Store> stores;
 	
 	public static void main(String[] args) {
 		launch(args);
@@ -41,6 +43,7 @@ public class Test1 extends Application {
 		
 		GameManager gm = new GameManager();
 		pits = initializePits(root, gm);
+		stores = initializeStores(root, gm);
 		root.getChildren().addAll(pits);
 		
 		//canvas.getChildren().addAll(placeInitialShapes(pits));
@@ -94,16 +97,54 @@ public class Test1 extends Application {
 		        	@Override public void handle(MouseEvent event) { 
 		        		//handle the pit being clicked on. Validate move, do a move... whatever, that's not my problem right now.
 		        		working_pit.setFill(Color.BISQUE);
-		        		gm.move(working_pit.place, 1);
+		        		int move_result = gm.move(working_pit.place, 1);
+		        		/*if (move_result < 2) {
+		        			Event.fireEvent(working_pit, MouseEvent.MOUSE_ENTERED);
+		        		}*/
 		        	}
 		        });
 		        
-			}
-			//create the kalahs here I guess, so the GUI array will line up with the gameboard array
-			//assign its place to be j * 2 + j
-			
+			}			
 			
 		}
 		return working;
+	}
+	
+	private Vector<Store> initializeStores(Pane root, GameManager gm) {
+		Vector<Store> working_vec = new Vector<Store>();
+		for (int i = 0; i < 2; i++) {
+			Store working = new Store(85 + i * 910, 330, 70, 125, i);
+			working.setFill(i == 0 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
+			root.getChildren().add(working);
+			
+	        working.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
+	        	@Override public void handle(MouseEvent event) {
+	        		//create new stack pane for the box, since these automatically center things
+	        		StackPane text_box = new StackPane();
+	        		text_box.setLayoutX(working.getCenterX() - 22.5);
+	        		text_box.setLayoutY(working.getCenterY() - 90);
+	        		text_box.setId("temp_box");
+
+	        		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
+	        		size_label.setFill(Color.RED);
+	        		Text number = new Text(Integer.toString(gm.board[working.player * 6 + 7]));
+	        		
+	        		text_box.getChildren().addAll(size_label, number);
+	        		size_label.setId("temp");
+	        		root.getChildren().add(text_box);
+	        		//something something create a text box above the pit when mouse is over it
+	        		//set the ID to something specific so that the mouse_exited item can remove it. 
+	        	}
+	        });
+	        
+	        working.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
+	        	@Override public void handle(MouseEvent event) {
+	        		javafx.scene.Node size_label = root.lookup("#temp_box");
+	        		root.getChildren().remove(size_label);
+	        		//destroy the object created when the mouse entered this pit
+	        	}
+	        });
+		}
+		return working_vec;
 	}
 }
