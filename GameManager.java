@@ -4,9 +4,9 @@ import java.util.Vector;
 import java.util.Scanner;
 
 public class GameManager {
-	int[] board = new int[14];
-	int player = 0;
-	boolean winner = false;
+	public int[] board = new int[14];
+	public int player = 0;
+	public boolean winner = false;
 	Scanner scanner = new Scanner(System.in);
 	
 	GameManager() { //initializes board
@@ -36,7 +36,7 @@ public class GameManager {
 		if(!playerHasStones() || !computerHasStones()) {
 			winner();								//game over calculate winner
 			
-			//*****exit game / start new game
+			
 			
 		}
 		
@@ -52,6 +52,10 @@ public class GameManager {
 	boolean legalMove(int selection, int player) {
 		boolean legalMove = true;
 		
+		if(board[selection] == 0 || selection > 13) { //illegal move for any player
+			legalMove = false;
+		}
+		
 		if(player == 0) {
 			if(selection == 0 || selection > 6) { //illegal move for player
 				legalMove = false;
@@ -62,9 +66,6 @@ public class GameManager {
 				legalMove = false;
 			}
 		}
-		
-		if(selection > 13) //too high index
-			legalMove = false;
 		
 		if(!legalMove) {
 			System.out.println("Illegal Move!!!");
@@ -100,7 +101,7 @@ public class GameManager {
 			}
 			else {
 				if(move < 7) {  //on your side
-					if(board[move] == 0) { //empty pit
+					if(board[move] == 1) { //empty pit
 						int opposite = 14 - move;
 						System.out.println("Won pit: " + opposite);
 						marblesWon = board[14 - move] + 1; //opposing pit plus capturing marble
@@ -128,7 +129,7 @@ public class GameManager {
 			}
 			else { 
 				if(move > 7) {  //on your side
-					if(board[move] == 0) { //empty pit
+					if(board[move] == 1) { //empty pit
 						int opposite = 14 - move;
 						System.out.println("Won pit: " + opposite);
 						marblesWon = board[opposite] + 1; //opposing pit plus capturing marble
@@ -149,9 +150,11 @@ public class GameManager {
 				playerHasStones = true;
 		}
 		if(!playerHasStones) {
-			for(int i = 8; i < 14; i++)
+			for(int i = 8; i < 14; i++) {
 				board[7] += board[i];
+				board[i] = 0;
 			}
+		}
 		return playerHasStones;
 	}
 	
@@ -163,15 +166,17 @@ public class GameManager {
 				computerHasStones = true;
 		}
 		if(!computerHasStones) {
-			for(int i = 1; i < 7; i++)
+			for(int i = 1; i < 7; i++) {
 				board[0] += board[i];
+				board[i] = 0;
+			}
 		}
 		return computerHasStones;
 	}
 	
 	boolean winner() { //0 player 1 AI
-		System.out.println("player's score: " + board[0]);
-		System.out.println("AI's score: " + board[7]);
+		System.out.println("Player 1's score: " + board[0]);
+		System.out.println("Player 2's score: " + board[7]);
 		return (board[7] > board[0]);
 	}
 	
@@ -190,4 +195,5 @@ public class GameManager {
 		}
 		System.out.println();
 	}
+
 }
