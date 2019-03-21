@@ -4,17 +4,23 @@ import java.util.Vector;
 
 public class GameManager {
 	int[] board = new int[14];
-
-	public void move(int selection, int player) {
-		
-		//***check if legal move?***
+	
+	//need to initialize board
+	
+	public boolean move(int selection, int player) {  //returns true after legal move made, returns false on illegal move
+		boolean legalMove = true;
 		
 		int grabbed = board[selection];
-		board[selection] = 0;
 		int move = selection + 1; //move is next pit
 		
 		//player's move
 		if(player == 0) {
+			if(selection == 0 || selection > 6) { //illegal move
+				return false;
+			}
+			
+			board[selection] = 0;		//legal move remove marbles from pit
+			
 			while(grabbed < 0) { //while marbles left
 				if(move > 6)  				//only move on your side
 					move = 0;
@@ -33,6 +39,12 @@ public class GameManager {
 		
 		//AI's move
 		else {
+			if(selection <= 7) { //illegal move
+				return false;
+			}
+			
+			board[selection] = 0;		//legal move remove marbles from pit
+			
 			while(grabbed < 0) { //while marbles left
 				if(move > 13)  				//only move on your side
 					move = 7;
@@ -48,9 +60,10 @@ public class GameManager {
 				}
 			}
 		}
+		return legalMove;
 	}
 	
-	public boolean playerNoStones() {
+	public boolean playerNoStones() {    // need to add gather all stones
 		boolean playerHasStones = false;
 		
 		for(int i = 1; i <= 3; i++) {
@@ -65,7 +78,7 @@ public class GameManager {
 		return playerHasStones;
 	}
 	
-	public boolean computerNoStones() {
+	public boolean computerNoStones() {  // need to add gather all stones
 		boolean computerHasStones = false;
 		
 		for(int i = 4; i <= 6; i++) {
