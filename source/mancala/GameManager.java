@@ -3,7 +3,7 @@ package mancala;
 import java.util.Vector;
 
 public class GameManager {
-	int[] board;
+	int[] board = new int[14];
 
 	public void move(int selection, int player) {
 		int grabbed = board[selection];
@@ -31,9 +31,12 @@ public class GameManager {
 							
 						}
 					}
+				}
 			}
-		}
 		
+		}
 	}
-}
+	public boolean winner() { //0 player 1 AI
+		return (board[7] > board[0]);
+	}
 }
