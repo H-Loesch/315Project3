@@ -25,8 +25,8 @@ import javafx.stage.Stage;
 public class Test1 extends Application {
 	Vector<Pit> pits = initializePits();
 	
-	public static void main() {
-		launch();
+	public static void main(String[] args) {
+		launch(args);
 	}
 
 	@Override
@@ -53,8 +53,9 @@ public class Test1 extends Application {
 				Pit working_pit = new Pit(85 + 130 * i, 120 + 140 * j, i * j, j);
 				working_pit.setFill(j == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
 				working.add(working_pit);
-				
 
+				//Event handlers for the mouse hovering over, leaving the area of, and clicking on the pits
+				//These could... probably be moved to the constructor for pits, maybe?
 		        working_pit.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
 		        	@Override public void handle(MouseEvent event) {
 		        		working_pit.setFill(Color.DARKRED);
@@ -81,7 +82,4 @@ public class Test1 extends Application {
 		}
 		return working;
 	}
-	
-	//it looks like there's stuff set up to allow events to fire when the user hovers over something, and stuff like that 
-	//which is good to know! That was something of a worry.
 }

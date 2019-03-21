@@ -23,10 +23,9 @@ public class Pit extends javafx.scene.shape.Circle{
 		contents = new Vector<Piece>();
 	}
 	
-	public Pit(int _player, int _x_loc, int _y_loc, int _place, Vector<Piece> _pieces) {
+	public Pit(int _x_loc, int _y_loc, int _place, int _player, Vector<Piece> _pieces) {
+		super(_x_loc, _y_loc, 55); //call constructor for circle 
 		player = _player;
-		x_location = _x_loc; 
-		y_location = _y_loc; 
 		place = _place;
 		contents = _pieces;
 	}
