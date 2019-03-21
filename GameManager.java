@@ -9,20 +9,18 @@ public class GameManager {
 	boolean winner = false;
 	Scanner scanner = new Scanner(System.in);
 	
-	void GameManager() { //initializes board
+	GameManager() { //initializes board
 		for(int i = 1; i < 14; i++) { //skip player's kala
 			if(i == 7)
 				i++;			//skip AI's kala
 			board[i] = 4;
 		}
-		print();
 	}
 	
 	void run() {
 		boolean legal = false;
 		int selection = 0;
 		print();
-		
 		
 		
 		while(!legal) { //continues till legal move made
@@ -55,13 +53,20 @@ public class GameManager {
 		
 		if(player == 0) {
 			if(selection == 0 || selection > 6) { //illegal move for player
-				return false;
+				legalMove = false;
 			}
 		}
 		else {
 			if(selection <= 7) { //illegal move for computer
-				return false;
+				legalMove = false;
 			}
+		}
+		
+		if(selection > 13) //too high index
+			legalMove = false;
+		
+		if(!legalMove) {
+			System.out.println("Illegal Move!!!");
 		}
 		return legalMove;
 		
@@ -71,6 +76,7 @@ public class GameManager {
 		
 		int grabbed = board[selection];
 		board[selection] = 0;		//remove marbles from pit
+		
 		int move = selection + 1; //move is next pit
 		int marblesWon;
 		
@@ -84,6 +90,7 @@ public class GameManager {
 					move = 0;
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
+				move += 1;
 			}
 			if(move == 0) { //landed in kala, go again
 				run();
@@ -107,6 +114,7 @@ public class GameManager {
 					move = 1;				//skip player's kala
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
+				move += 1;
 			}
 			if(move == 7) { //landed in kala, go again
 				run();
@@ -166,8 +174,9 @@ public class GameManager {
 		//print kalas
 		System.out.println("\n" + board[0] + "         " + board[7]);
 		//print bottom
-		for(int i = 13; i > 7; i--) {
+		for(int i = 1; i < 7; i++) {
 			System.out.print(board[i] + " ");
 		}
+		System.out.println();
 	}
 }
