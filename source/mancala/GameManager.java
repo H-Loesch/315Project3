@@ -36,6 +36,37 @@ public class GameManager {
 		
 		}
 	}
+	
+	public boolean playerNoStones() {
+		boolean playerHasStones = false;
+		
+		for(int i = 1; i <= 3; i++) {
+			if(board[i] >= 0)
+				playerHasStones = true;
+		}
+		for(int i = 11; i <= 13; i++) {
+			if(board[i] >= 0)
+				playerHasStones = true;
+		}
+	
+		return playerHasStones;
+	}
+	
+	public boolean computerNoStones() {
+		boolean computerHasStones = false;
+		
+		for(int i = 4; i <= 6; i++) {
+			if(board[i] >= 0)
+				computerHasStones = true;
+		}
+		for(int i = 8; i <= 10; i++) {
+			if(board[i] >= 0)
+				computerHasStones = true;
+		}
+	
+		return computerHasStones;
+	}
+	
 	public boolean winner() { //0 player 1 AI
 		return (board[7] > board[0]);
 	}
