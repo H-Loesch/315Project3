@@ -1,21 +1,53 @@
 package mancala;
 
 import java.util.Vector;
+import java.util.Scanner;
 
 public class GameManager {
 	int[] board = new int[14];
+	int player = 0;
+	boolean winner = false;
+	Scanner scanner = new Scanner(System.in);
 	
-	public void run() {
-		int selection, player;
-		initialize(); //initialize board
-		player = 0;   //player goes 1st
+	void GameManager() { //initializes board
+		for(int i = 1; i < 14; i++) { //skip player's kala
+			if(i == 7)
+				i++;			//skip AI's kala
+			board[i] = 4;
+		}
+		print();
+	}
+	
+	void run() {
+		boolean legal = false;
+		int selection = 0;
+		print();
 		
-		selection = -1;  //to always fail at start
 		
-		while(!legalMove(selection, player)) { //continues till legal move made
-			selection = 1;   //need to get new input for move
+		
+		while(!legal) { //continues till legal move made
+			System.out.println("\ninput move: ");
+			selection = Integer.parseInt(scanner.next());   //get new input for move
+			legal = legalMove(selection, player);
+		}
+		//legal move made
+		move(selection, player);
+		
+		//check game over state
+		if(!playerHasStones() || !computerHasStones()) {
+			winner();								//game over calculate winner
+			
+			//*****exit game / start new game
+			
 		}
 		
+		//switch players
+		if(player == 0)
+			player = 1;
+		else
+			player = 0;
+		
+		run();  //continue to run
 	}
 	
 	boolean legalMove(int selection, int player) {
@@ -54,7 +86,7 @@ public class GameManager {
 				grabbed = grabbed - 1;
 			}
 			if(move == 0) { //landed in kala, go again
-				
+				run();
 			}
 			else {
 				if(move < 7) {  //on your side
@@ -67,7 +99,7 @@ public class GameManager {
 				}
 			}
 		}
-		
+		 
 		//AI's move
 		else {
 			while(grabbed > 0) { //while marbles left
@@ -77,7 +109,7 @@ public class GameManager {
 				grabbed = grabbed - 1;
 			}
 			if(move == 7) { //landed in kala, go again
-				
+				run();
 			}
 			else { 
 				if(move > 7) {  //on your side
@@ -92,41 +124,50 @@ public class GameManager {
 		}
 	}
 	
-	boolean playerNoStones() {    // need to add gather all stones
+	boolean playerHasStones() {    // need to add gather all stones
 		boolean playerHasStones = false;
 		
-		for(int i = 1; i <= 3; i++) {
-			if(board[i] >= 0)
+		for(int i = 1; i < 7; i++) {
+			if(board[i] > 0)
 				playerHasStones = true;
 		}
-		for(int i = 11; i <= 13; i++) {
-			if(board[i] >= 0)
-				playerHasStones = true;
-		}
-	
+		if(!playerHasStones) {
+			for(int i = 8; i < 14; i++)
+				board[7] += board[i];
+			}
 		return playerHasStones;
 	}
 	
-	boolean computerNoStones() {  // need to add gather all stones
+	boolean computerHasStones() {  // need to add gather all stones
 		boolean computerHasStones = false;
 		
-		for(int i = 4; i <= 6; i++) {
-			if(board[i] >= 0)
+		for(int i = 8; i < 14; i++) {
+			if(board[i] > 0)
 				computerHasStones = true;
 		}
-		for(int i = 8; i <= 10; i++) {
-			if(board[i] >= 0)
-				computerHasStones = true;
+		if(!computerHasStones) {
+			for(int i = 1; i < 7; i++)
+				board[0] += board[i];
 		}
-	
 		return computerHasStones;
 	}
 	
 	boolean winner() { //0 player 1 AI
+		System.out.println("player's score: " + board[0]);
+		System.out.println("AI's score: " + board[7]);
 		return (board[7] > board[0]);
 	}
-
-	void initialize() {
-		
+	
+	void print() {
+		//print top
+		for(int i = 13; i > 7; i--) {
+			System.out.print(board[i] + " ");
+		}
+		//print kalas
+		System.out.println("\n" + board[0] + "         " + board[7]);
+		//print bottom
+		for(int i = 13; i > 7; i--) {
+			System.out.print(board[i] + " ");
+		}
 	}
 }
