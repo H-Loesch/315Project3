@@ -45,15 +45,18 @@ public class GameManager {
 			board[selection] = 0;		//remove marbles from pit
 			
 			while(grabbed < 0) { //while marbles left
-				if(move > 6)  				//only move on your side
+				if(move == 7) {
+					move += 1;			//skip AI's kala
+				}
+				if(move > 13)  				//start over
 					move = 0;
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
 			}
-			if(move == 0) { //user moves again landed in kala
+			if(move == 0) { //landed in kala, go again
 				
 			}
-			else {
+			else { //need to check if on ur side
 				if(board[move] == 0) { //empty pit, take opposing team's pit
 					
 				}
@@ -66,14 +69,14 @@ public class GameManager {
 			
 			while(grabbed < 0) { //while marbles left
 				if(move > 13)  				//only move on your side
-					move = 7;
+					move = 1;				//skip player's kala
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
 			}
-			if(move == 0) { //user moves again landed in kala
+			if(move == 0) { //landed in kala, go again
 				
 			}
-			else {
+			else {    //need to check if on ur side
 				if(board[move] == 0) { //empty pit, take opposing team's pit
 					
 				}
