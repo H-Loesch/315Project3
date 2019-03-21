@@ -23,7 +23,7 @@ import javafx.stage.Stage;
  */
 
 public class Test1 extends Application {
-	Vector<Pit> pits = initializePits();
+	Vector<Pit> pits;
 	
 	public static void main(String[] args) {
 		launch(args);
@@ -32,17 +32,17 @@ public class Test1 extends Application {
 	@Override
 	public void start(Stage primary) throws Exception {
 		primary.setTitle("Mancala!");
-		Pane canvas = new Pane();
-		canvas.setPrefSize(1080, 720);
-		canvas.setStyle("-fx-background-color: burlywood;");
-		pits = initializePits();
-		canvas.getChildren().addAll(pits);
+		Pane root = new Pane();
+		root.setPrefSize(1080, 720);
+		root.setStyle("-fx-background-color: burlywood;");
+		pits = initializePits(root);
+		root.getChildren().addAll(pits);
 		//canvas.getChildren().addAll(placeInitialShapes(pits));
-		primary.setScene(new Scene(canvas)); //sets stage to show the scene
+		primary.setScene(new Scene(root)); //sets stage to show the scene
  		primary.show(); //shows the scene in the newly-created application
 	}
 	
-	private Vector<Pit> initializePits() {
+	private Vector<Pit> initializePits(Pane root) {
 		//initialize location, all that for the pits. 
 		//don't yet initialize the stones that will go in them. Or maybe do, idk.
 		Vector<Pit> working = new Vector<Pit>();
@@ -50,7 +50,7 @@ public class Test1 extends Application {
 		   1 2 3 4  5  6 */
 		for (int j = 1; j < 3; j++) {
 			for (int i = 1; i < 7; i++) {
-				Pit working_pit = new Pit(85 + 130 * i, 120 + 140 * j, i * j, j);
+				Pit working_pit = new Pit(85 + 130 * i, 120 + 140 * j, i * j + j - 1, j);
 				working_pit.setFill(j == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
 				working.add(working_pit);
 
@@ -58,6 +58,10 @@ public class Test1 extends Application {
 				//These could... probably be moved to the constructor for pits, maybe?
 		        working_pit.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
 		        	@Override public void handle(MouseEvent event) {
+		        		javafx.scene.shape.Rectangle size_label = new javafx.scene.shape.Rectangle(working_pit.getCenterX() - 22.5, working_pit.getCenterY() -90, 45, 35);
+		        		size_label.setId("temp");
+		        		size_label.setFill(Color.BLACK);
+		        		root.getChildren().add(size_label);
 		        		working_pit.setFill(Color.DARKRED);
 		        		//something something create a text box above the pit when mouse is over it
 		        		//set the ID to something specific so that the mouse_exited item can remove it. 
@@ -66,6 +70,8 @@ public class Test1 extends Application {
 		        
 		        working_pit.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
 		        	@Override public void handle(MouseEvent event) {
+		        		javafx.scene.Node size_label = root.lookup("#temp");
+		        		root.getChildren().remove(size_label);
 		        		working_pit.setFill(Color.AQUA);
 		        		//destroy the object created when the mouse entered this pit
 		        	}
@@ -79,6 +85,10 @@ public class Test1 extends Application {
 		        });
 		        
 			}
+			//create the kalahs here I guess, so the GUI array will line up with the gameboard array
+			//assign its place to be j * 2 + j
+			
+			
 		}
 		return working;
 	}

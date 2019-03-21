@@ -10,8 +10,6 @@ public class Pit extends javafx.scene.shape.Circle{
 	
 	private Vector<Piece> contents;
 	public int place; //numerical place on the board 
-	public int x_location; //x-axis location in the representation of the board 
-	public int y_location; //y-axis location in... well, not "physical space", but you get what I mean.
 	public int player; //which player does this pit belong to?
 	//maybe some variable that notes if this pit has changed, and thus needs to be re-rendered?
 
