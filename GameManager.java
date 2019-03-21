@@ -21,6 +21,7 @@ public class GameManager {
 		boolean legal = false;
 		int selection = 0;
 		print();
+		System.out.println("Player's " + player + " turn");
 		
 		
 		while(!legal) { //continues till legal move made
@@ -77,27 +78,31 @@ public class GameManager {
 		int grabbed = board[selection];
 		board[selection] = 0;		//remove marbles from pit
 		
-		int move = selection + 1; //move is next pit
+		int move = selection; //move is next pit
 		int marblesWon;
 		
 		//player's move
 		if(player == 0) {
 			while(grabbed > 0) { //while marbles left
+				move += 1; //place in next pit
 				if(move == 7) {
 					move += 1;			//skip AI's kala
 				}
 				if(move > 13)  				//start over
-					move = 0;
+					move = 1;
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
-				move += 1;
 			}
+			System.out.println("Move ended on: " + move);
 			if(move == 0) { //landed in kala, go again
+				System.out.println("Go again!");
 				run();
 			}
 			else {
 				if(move < 7) {  //on your side
 					if(board[move] == 0) { //empty pit
+						int opposite = 14 - move;
+						System.out.println("Won pit: " + opposite);
 						marblesWon = board[14 - move] + 1; //opposing pit plus capturing marble
 						board[14-move] = 0;				//set gathered pit's marble to 0
 						board[move] = 0;
@@ -110,22 +115,26 @@ public class GameManager {
 		//AI's move
 		else {
 			while(grabbed > 0) { //while marbles left
+				move += 1;
 				if(move > 13)  				//only move on your side
 					move = 1;				//skip player's kala
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
-				move += 1;
 			}
+			System.out.println("Move ended on: " + move);
 			if(move == 7) { //landed in kala, go again
+				System.out.println("Go again!");
 				run();
 			}
 			else { 
 				if(move > 7) {  //on your side
 					if(board[move] == 0) { //empty pit
-						marblesWon = board[14 - move] + 1; //opposing pit plus capturing marble
-						board[14-move] = 0;				//set gathered pit's marble to 0
+						int opposite = 14 - move;
+						System.out.println("Won pit: " + opposite);
+						marblesWon = board[opposite] + 1; //opposing pit plus capturing marble
+						board[opposite] = 0;				//set gathered pit's marble to 0
 						board[move] = 0;
-						board[0] += marblesWon;   		//adds marbles won to player's kala
+						board[7] += marblesWon;   		//adds marbles won to player's kala
 					}
 				}
 			}
@@ -168,14 +177,16 @@ public class GameManager {
 	
 	void print() {
 		//print top
+		System.out.print("| ");
 		for(int i = 13; i > 7; i--) {
-			System.out.print(board[i] + " ");
+			System.out.print(board[i] + " | ");
 		}
 		//print kalas
-		System.out.println("\n" + board[0] + "         " + board[7]);
+		System.out.println("\n" + board[0] + "                       " + board[7]);
 		//print bottom
+		System.out.print("| ");
 		for(int i = 1; i < 7; i++) {
-			System.out.print(board[i] + " ");
+			System.out.print(board[i] + " | ");
 		}
 		System.out.println();
 	}
