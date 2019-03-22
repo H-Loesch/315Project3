@@ -8,7 +8,7 @@ public class GameManager {
 	public int player = 0;
 	public boolean winner = false;
 	Scanner scanner = new Scanner(System.in);
-	
+
 	GameManager() { //initializes board
 		for(int i = 1; i < 14; i++) { //skip player's kala
 			if(i == 7)
@@ -16,14 +16,14 @@ public class GameManager {
 			board[i] = 4;
 		}
 	}
-	
+
 	void run() {
 		boolean legal = false;
 		int selection = 0;
 		print();
 		System.out.println("Player's " + player + " turn");
-		
-		
+
+
 		while(!legal) { //continues till legal move made
 			System.out.println("\ninput move: ");
 			selection = Integer.parseInt(scanner.next());   //get new input for move
@@ -31,16 +31,16 @@ public class GameManager {
 		}
 		//legal move made
 		move(selection);
-		
+
 		//check game over state
 		if(!playerHasStones() || !computerHasStones()) {
 			winner();								//game over calculate winner
-			
-			
-			
+
+
+
 		}
-		
-		
+
+
 		/*switch players
 		if(player == 0)
 			player = 1;
@@ -49,14 +49,14 @@ public class GameManager {
 		*/
 		run();  //continue to run
 	}
-	
+
 	boolean legalMove(int selection) {
 		boolean legalMove = true;
-		
+
 		if(board[selection] == 0 || selection > 13) { //illegal move for any player
 			legalMove = false;
 		}
-		
+
 		if(player == 0) {
 			if(selection == 0 || selection > 6) { //illegal move for player
 				legalMove = false;
@@ -67,22 +67,22 @@ public class GameManager {
 				legalMove = false;
 			}
 		}
-		
+
 		if(!legalMove) {
 			System.out.println("Illegal Move!!!");
 		}
 		return legalMove;
-		
+
 	}
-	
+
 	void move(int selection) {  //returns true after legal move made, returns false on illegal move
-		
+
 		int grabbed = board[selection];
 		board[selection] = 0;		//remove marbles from pit
-		
+
 		int move = selection; //move is next pit
 		int marblesWon;
-		
+
 		//player's move
 		if(player == 0) {
 			while(grabbed > 0) { //while marbles left
@@ -118,7 +118,7 @@ public class GameManager {
 			else
 				player = 0;
 		}
-		 
+
 		//AI's move
 		else {
 			while(grabbed > 0) { //while marbles left
@@ -133,7 +133,7 @@ public class GameManager {
 				System.out.println("Go again!");
 				run();
 			}
-			else { 
+			else {
 				if(move > 7) {  //on your side
 					if(board[move] == 1) { //empty pit
 						int opposite = 14 - move;
@@ -147,10 +147,10 @@ public class GameManager {
 			}
 		}
 	}
-	
+
 	boolean playerHasStones() {    // need to add gather all stones
 		boolean playerHasStones = false;
-		
+
 		for(int i = 1; i < 7; i++) {
 			if(board[i] > 0)
 				playerHasStones = true;
@@ -163,10 +163,10 @@ public class GameManager {
 		}
 		return playerHasStones;
 	}
-	
+
 	boolean computerHasStones() {  // need to add gather all stones
 		boolean computerHasStones = false;
-		
+
 		for(int i = 8; i < 14; i++) {
 			if(board[i] > 0)
 				computerHasStones = true;
@@ -179,13 +179,13 @@ public class GameManager {
 		}
 		return computerHasStones;
 	}
-	
+
 	boolean winner() { //0 player 1 AI
 		System.out.println("Player 1's score: " + board[0]);
 		System.out.println("AI's score: " + board[7]);
 		return (board[7] > board[0]);
 	}
-	
+
 	void print() {
 		//print top
 		System.out.print("| ");

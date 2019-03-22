@@ -2,17 +2,19 @@ package mancala;
 import java.util.*;
 
 public class Node {
-	GameManager root;
-	ArrayList<GameManager> children;
+	GameManager node;
+	ArrayList<Node> children;
 	ArrayList<Integer> moves = new ArrayList<Integer>();
-	
+
 	Node(GameManager game){
-		root = game;
-		children = new ArrayList<GameManager>();
+		node = game;
+		children = new ArrayList<Node>();
 	}
+
+	/*
 	void createChildren() {
 		validMoves();
-		
+
 		int numMoves = moves.size();
 		for(int i = 0; i < numMoves; i++) {
 			children.add(nextGame(moves.get(i)));
@@ -29,7 +31,7 @@ public class Node {
 			for(int i = 8; i < 14; i++) {
 				if(root.board[i] != 0)
 					moves.add(i);
-			}	
+			}
 		}
 	}
 
@@ -38,4 +40,5 @@ public class Node {
 		child.move(move);
 		return child;
 	}
+	*/
 }
