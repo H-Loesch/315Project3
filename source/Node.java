@@ -1,5 +1,7 @@
 package mancala;
-import java.util.*;
+
+import java.util.ArrayList;
+
 
 public class Node {
 	GameManagerSimulator node;

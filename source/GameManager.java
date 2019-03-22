@@ -1,15 +1,13 @@
 package mancala;
 
 import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.Random;
 
 public class GameManager {
 	public int[] board;
 	int time = 10*1000;
-	boolean legal;
 	int size;
+	boolean pieRule = true;
 	public int player = 0;
 	public boolean winner = false;
 	Scanner scanner = new Scanner(System.in);
@@ -43,12 +41,12 @@ public class GameManager {
 				board[size/2 + i] = stones;				//computer's side
 			}
 		}
+		print();
 	}
 
 	void run() {
-		legal = false;
+		boolean legal = false;
 		int selection = -1;
-		print();
 		System.out.println("Player's " + player + " turn");
 
 		long finishTime = System.currentTimeMillis() + time;
@@ -63,14 +61,23 @@ public class GameManager {
 		}
 		//legal move made
 		move(selection);
+		print();
 
+		if(pieRule){
+			System.out.println("Pie Rule: Want to switch sides? (0 for no 1 for yes)");
+			selection = Integer.parseInt(scanner.next());   //get new input for pie rule answer
+			if(selection == 1){
+				pieRule();
+				print();
+			}
+		}
+		pieRule = false;
 		//check game over state
 		if(!playerHasStones() || !computerHasStones()) {
 			winner();								//game over calculate winner
 		}
 		run();  //continue to run
 	}
-
 
 	boolean legalMove(int selection) {
 		boolean legalMove = true;
@@ -173,6 +180,19 @@ public class GameManager {
 		}
 	}
 
+	void pieRule(){
+		int newBoard[] = new int[size];
+
+		for(int i = 1; i < size/2-1; i++)
+		{
+			newBoard[i] = board[size/2 + i];
+		}
+		for(int i = 0; i < size/2; i++){
+			newBoard[size/2 + i] = board[i];
+		}
+		board = newBoard;
+	}
+
 	boolean playerHasStones() {    // need to add gather all stones
 		boolean playerHasStones = false;
 
@@ -210,7 +230,6 @@ public class GameManager {
 		System.out.println("AI's score: " + board[7]);
 		return (board[size/2] > board[0]);
 	}
-
 
 	void print() {
 		//print top
