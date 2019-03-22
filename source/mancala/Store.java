@@ -8,6 +8,7 @@ import javafx.scene.shape.Ellipse;
 //the two larger pits on the far ends of the game board, where captured stones are stored (what a fitting name!)
 public class Store extends Ellipse{
 	int player;
+	int size;
 	
 	Store(double _x_loc, double _y_loc, double _x_size, double _y_size, int _player) {
 		super(_x_loc, _y_loc, _x_size, _y_size);

@@ -7,7 +7,7 @@ public class Tree {
 	ArrayList<Node> children;
 	ArrayList<Integer> moves = new ArrayList<Integer>();
 
-	Tree(GameManager game){  //constructor
+	/*Tree(GameManager game){  //constructor
 		root = new Node(game);
 	}
 
@@ -41,10 +41,10 @@ public class Tree {
 		}
 	}
 
-	Node nextGame(int move) {
+	/*Node nextGame(int move) {
 		//NEED TO CHECK IF GAME WON/LOST
 		Node child = root;
 		child.node.move(move);
 		return child;
-	}
+	}*/
 }

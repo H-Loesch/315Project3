@@ -47,7 +47,7 @@ public class GameManager {
 			player = 0;
 
 		run();  //continue to run
-	}*/
+	}
 
 	boolean legalMove(int selection, int player) {
 		boolean legalMove = true;
@@ -57,12 +57,12 @@ public class GameManager {
 		}
 
 		if(player == 0) {
-			if(selection == 0 || selection > 6) { //illegal move for player
+			if(selection == 0 || selection <= 7) { //illegal move for player
 				legalMove = false;
 			}
 		}
 		else {
-			if(selection <= 7) { //illegal move for computer
+			if(selection > 6) { //illegal move for computer
 				legalMove = false;
 			}
 		}
@@ -76,15 +76,15 @@ public class GameManager {
 
 	int move(int selection, int player) {  //returns true after legal move made, returns false on illegal move
 
+		if (!legalMove(selection, player)) {
+			return 2;
+		}
+		
 		int grabbed = board[selection];
 		board[selection] = 0;		//remove marbles from pit
 
 		int move = selection; //move is next pit
 		int marblesWon;
-
-		if (!legalMove(selection, player)) {
-			return 2;
-		}
 
 		//player's move
 		if(player == 0) {
