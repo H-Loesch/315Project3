@@ -3,6 +3,8 @@ package mancala;
 import java.util.Random;
 //extend from Node, pass 
 import java.util.Vector;
+
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
 //the six pits on each side of the game board (total 12)
@@ -42,6 +44,7 @@ public class Pit extends javafx.scene.shape.Circle{
 		double y_loc = this.getCenterY() + key.nextInt(61) - 30;
 		//create piece
 		Piece new_piece = new Piece(x_loc, y_loc, this);
+		new_piece.setStroke(Color.BLACK);
 		contents.add(new_piece);
 		size += 1;
 		
