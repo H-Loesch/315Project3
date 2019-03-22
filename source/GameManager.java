@@ -6,6 +6,7 @@ import java.util.Scanner;
 public class GameManager {
 	public int[] board = new int[14];
 	public int player = 0;
+	String currentPlayer;
 	public int playerWon = -1;
 	Scanner scanner = new Scanner(System.in);
 
@@ -21,35 +22,35 @@ public class GameManager {
 		boolean legal = false;
 		int selection = 0;
 		print();
-		System.out.println("Player's " + player + " turn");
+		if(player == 0){
+			currentPlayer = "User";
+		}
+		else
+			currentPlayer = "Computer";
 
+		System.out.println(currentPlayer + "'s turn");
 
-		while(!legal) { //continues till legal move made
-			System.out.println("\ninput move: ");
-			selection = Integer.parseInt(scanner.next());   //get new input for move
-			legal = legalMove(selection, player);
+		if(player == 0) {	//get player's move
+			while(!legal) { //continues till legal move made
+				System.out.println("\ninput move: ");
+				selection = Integer.parseInt(scanner.next());   //get new input for move
+				legal = legalMove(selection);
+			}
+		}
+		else {//computer's move
+
 		}
 		//legal move made
-		move(selection, player);
+		move(selection);
 
 		//check game over state
 		if(!playerHasStones() || !computerHasStones()) {
 			winner();								//game over calculate winner
-
-
-
 		}
-
-		//switch players
-		if(player == 0)
-			player = 1;
-		else
-			player = 0;
-
 		run();  //continue to run
-	}*/
+	}
 
-	boolean legalMove(int selection, int player) {
+	boolean legalMove(int selection) {
 		boolean legalMove = true;
 
 		if(board[selection] == 0 || selection > 13) { //illegal move for any player
@@ -74,17 +75,13 @@ public class GameManager {
 
 	}
 
-	int move(int selection, int player) {  //returns true after legal move made, returns false on illegal move
+	void move(int selection) {  //returns true after legal move made, returns false on illegal move
 
 		int grabbed = board[selection];
 		board[selection] = 0;		//remove marbles from pit
 
 		int move = selection; //move is next pit
 		int marblesWon;
-
-		if (!legalMove(selection, player)) {
-			return 2;
-		}
 
 		//player's move
 		if(player == 0) {
@@ -101,7 +98,7 @@ public class GameManager {
 			System.out.println("Move ended on: " + move);
 			if(move == 0) { //landed in kala, go again
 				System.out.println("Go again!");
-				return 0;
+				run();
 			}
 			else {
 				if(move < 7) {  //on your side
@@ -115,6 +112,11 @@ public class GameManager {
 					}
 				}
 			}
+			//switch players
+			if(player == 0)
+				player = 1;
+			else
+				player = 0;
 		}
 
 		//AI's move
@@ -129,7 +131,7 @@ public class GameManager {
 			System.out.println("Move ended on: " + move);
 			if(move == 7) { //landed in kala, go again
 				System.out.println("Go again!");
-				return 1;
+				run();
 			}
 			else {
 				if(move > 7) {  //on your side
@@ -144,7 +146,6 @@ public class GameManager {
 				}
 			}
 		}
-		return 1 - player;
 	}
 
 	boolean playerHasStones() {    // need to add gather all stones
