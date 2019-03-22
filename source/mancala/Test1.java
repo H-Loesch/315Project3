@@ -19,7 +19,9 @@ import javafx.stage.Stage;
 //TODO find some way to center the mancala board regardless of the windows' size?
 //TODO make the GUI check each cycle *not* be terrible
 //TODO see about deleting objects instead of just removing them from the root pane's list (memory leak)
-
+//TODO improve placement for pieces inside stores
+//TODO Add displays: current player, each player's score; probably other things too 
+//TODO move color of pieces into the piece constructor, possibly some other stuff
 public class Test1 extends Application {
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
@@ -107,16 +109,24 @@ public class Test1 extends Application {
 		        		int move_result = gm.move(working_pit.place, player);
 		        		if (move_result < 2) {
 		        			//if move was successful
-	        				working_pit.setFill(Color.BISQUE);
 	        				player = move_result;
 	        				
-	        				for (Pit working : pits) {
-	        					while (working.size > gm.board[working.place]) 
-	        						root.getChildren().remove(working.removePiece());
-	        					while (working.size < gm.board[working.place])
-	        						root.getChildren().add(working.addPiece());
+	        				//empty or fill pits to correct size
+	        				for (Pit change_pit : pits) {
+	        					while (change_pit.size > gm.board[change_pit.place]) 
+	        						root.getChildren().remove(change_pit.removePiece());
+	        					while (change_pit.size < gm.board[change_pit.place])
+	        						root.getChildren().add(change_pit.addPiece());
 	        				}
 	        				
+	        				for (Store working_store : stores) {
+	        					while (working_store.size > gm.board[working_store.player * 7]) 
+	        						root.getChildren().remove(working_store.removePiece());
+	        					while (working_store.size < gm.board[working_store.player * 7])
+	        						root.getChildren().add(working_store.addPiece());
+	        				}
+	        				
+	        				//empty or fill stores to correct size
 	        				/*for (Store working : stores) {
 	        					while (working.size > gm.board[working.place]) 
 	        						root.getChildren().remove(working.removePiece());
@@ -131,9 +141,6 @@ public class Test1 extends Application {
 		        			}*/
 		        			
 		        		}
-		        		/*if (move_result < 2) {
-		        			Event.fireEvent(working_pit, MouseEvent.MOUSE_ENTERED);
-		        		}*/
 		        	}
 		        });
 		        
@@ -149,6 +156,7 @@ public class Test1 extends Application {
 			Store working = new Store(85 + (1 - i) * 910, 330, 70, 125, i);
 			working.setFill(i == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
 			root.getChildren().add(working);
+			working_vec.add(working);
 			
 	        working.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
 	        	//when mouse enters the pit, create a text box with the # of pieces in that pit above it.

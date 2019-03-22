@@ -43,8 +43,9 @@ public class Pit extends javafx.scene.shape.Circle{
 		double x_loc = this.getCenterX() + key.nextInt(61) - 30;
 		double y_loc = this.getCenterY() + key.nextInt(61) - 30;
 		//create piece
-		Piece new_piece = new Piece(x_loc, y_loc, this);
+		Piece new_piece = new Piece(x_loc, y_loc);
 		new_piece.setStroke(Color.BLACK);
+		new_piece.setMouseTransparent(true);
 		contents.add(new_piece);
 		size += 1;
 		

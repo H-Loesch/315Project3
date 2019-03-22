@@ -14,9 +14,8 @@ public class Piece extends javafx.scene.shape.Circle {
 	//create a piece with random color 
 	//TODO make version that specifies color
 	//TODO add more potential colors
-	Piece(double _x_loc, double _y_loc, Pit _container) {
+	Piece(double _x_loc, double _y_loc) {
 		super(_x_loc, _y_loc, 20);
-		container = _container;
 		
 		int color_key = key.nextInt(3);
 		switch(color_key) {
