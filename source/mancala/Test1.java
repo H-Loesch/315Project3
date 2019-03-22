@@ -27,8 +27,8 @@ import javafx.stage.Stage;
  */
 
 public class Test1 extends Application {
-	Vector<Pit> pits;
-	Vector<Store> stores;
+	private Vector<Pit> pits;
+	private Vector<Store> stores;
 	
 	public static void main(String[] args) {
 		launch(args);
@@ -59,7 +59,7 @@ public class Test1 extends Application {
 		   1 2 3 4  5  6 */
 		for (int j = 1; j < 3; j++) {
 			for (int i = 1; i < 7; i++) {
-				Pit working_pit = new Pit(85 + 130 * i, 120 + 140 * j, i * j + j - 1, j);
+				Pit working_pit = new Pit(85 + 130 * i, 120 + 140 * j, (j-1)*7 + i, j);
 				working_pit.setFill(j == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
 				working.add(working_pit);
 
@@ -80,8 +80,6 @@ public class Test1 extends Application {
 		        		text_box.getChildren().addAll(size_label, number);
 		        		size_label.setId("temp");
 		        		root.getChildren().add(text_box);
-		        		//something something create a text box above the pit when mouse is over it
-		        		//set the ID to something specific so that the mouse_exited item can remove it. 
 		        	}
 		        });
 		        
