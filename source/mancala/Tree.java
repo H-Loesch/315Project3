@@ -12,7 +12,13 @@ public class Tree {
 	}
 
 	void createChildren(Node currentNode) {
-		validMoves(currentNode);
+		if(currentNode.node.playerWon == 0){  //player wins
+
+		}
+		else if(currentNode.node.playerWon == 1){	//AI wins
+
+		}
+		validMoves(currentNode);			//no winner yet, find next valid moves
 
 		int numMoves = moves.size();
 		for(int i = 0; i < numMoves; i++) {
@@ -36,6 +42,7 @@ public class Tree {
 	}
 
 	Node nextGame(int move) {
+		//NEED TO CHECK IF GAME WON/LOST
 		Node child = root;
 		child.node.move(move);
 		return child;

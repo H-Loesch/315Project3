@@ -6,13 +6,13 @@ import java.util.Scanner;
 public class GameManager {
 	public int[] board = new int[14];
 	public int player = 0;
-	public boolean winner = false;
+	public int playerWon = -1;
 	Scanner scanner = new Scanner(System.in);
 
 	GameManager() { //initializes board
-		for(int i = 1; i < 14; i++) { //skip player's kala
+		for(int i = 1; i < 14; i++) { //skip player's kala at 0
 			if(i == 7)
-				i++;			//skip AI's kala
+				i++;			//skip AI's kala at 7
 			board[i] = 4;
 		}
 	}
@@ -35,18 +35,7 @@ public class GameManager {
 		//check game over state
 		if(!playerHasStones() || !computerHasStones()) {
 			winner();								//game over calculate winner
-
-
-
 		}
-
-
-		/*switch players
-		if(player == 0)
-			player = 1;
-		else
-			player = 0;
-		*/
 		run();  //continue to run
 	}
 
@@ -180,10 +169,15 @@ public class GameManager {
 		return computerHasStones;
 	}
 
-	boolean winner() { //0 player 1 AI
+	int winner() { //0 player 1 AI
 		System.out.println("Player 1's score: " + board[0]);
 		System.out.println("AI's score: " + board[7]);
-		return (board[7] > board[0]);
+		if(board[0] > board[7])		//player wins
+			return 0;
+		else if(board[7] > board[6])	//AI wins
+			return 1;
+		else							//Tie
+			return 2;
 	}
 
 	void print() {
