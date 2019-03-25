@@ -1,0 +1,193 @@
+package mancala;
+
+import java.util.Vector;
+
+import javafx.application.Application;
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
+import javafx.stage.Stage;
+
+
+//decent widthfor each pit is about 3 mouse cursors wide. So that's about 100 pixels each. 
+//TODO find some way to center the mancala board regardless of the windows' size?
+//TODO make the GUI check each cycle *not* be terrible
+//TODO see about deleting objects instead of just removing them from the root pane's list (memory leak)
+//TODO improve placement for pieces inside stores
+//TODO Add displays: current player, each player's score; probably other things too 
+//TODO move color of pieces into the piece constructor, possibly some other stuff
+public class Test1 extends Application {
+	private Vector<Pit> pits;
+	private Vector<Store> stores;
+	int player = 0; 
+	
+	public static void main(String[] args) {
+		launch(args);
+	}
+
+	@Override
+	public void start(Stage primary) throws Exception {
+		primary.setTitle("Mancala!");
+		Pane root = new Pane();
+		root.setPrefSize(1080, 720);
+		root.setStyle("-fx-background-color: burlywood;");
+		
+		GameManager gm = new GameManager();
+		pits = initializePits(root, gm);
+		stores = initializeStores(root, gm);
+		root.getChildren().addAll(pits);
+		for (Pit pit : pits) {
+			for (int i = 0; i < 4; i++) {
+				root.getChildren().add(pit.addPiece());
+			}
+		}
+		
+		//canvas.getChildren().addAll(placeInitialShapes(pits));
+		primary.setScene(new Scene(root)); //sets stage to show the scene
+ 		primary.show(); //shows the scene in the newly-created application
+	}
+	
+	private Vector<Pit> initializePits(Pane root, GameManager gm) {
+		//initialize location, all that for the pits. 
+		//don't yet initialize the stones that will go in them. Or maybe do, idk.
+		Vector<Pit> working = new Vector<Pit>();
+		/* 7 8 9 10 11 12
+		   1 2 3 4  5  6 */
+		for (int j = 1; j < 3; j++) {
+			for (int i = 1; i < 7; i++) {
+				Pit working_pit;
+				if (j == 1) {
+					working_pit = new Pit(995 - i * 130, 260, i, 0);
+					working_pit.setFill(Color.SADDLEBROWN);
+				}
+				else {
+					working_pit = new Pit(85 + 130 * i, 400, 7 + i, 1);
+					working_pit.setFill(Color.DARKGOLDENROD);
+				}
+				working.add(working_pit);
+
+				//Event handlers for the mouse hovering over, leaving the area of, and clicking on the pits
+				//These could... probably be moved to the constructor for pits, maybe?
+		        working_pit.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
+		        	@Override public void handle(MouseEvent event) {
+		        		//create new stack pane for the box, since these automatically center things
+		        		StackPane text_box = new StackPane();
+		        		text_box.setLayoutX(working_pit.getCenterX() - 22.5);
+		        		text_box.setLayoutY(working_pit.getCenterY() - 90);
+		        		text_box.setId("temp_box");
+
+		        		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
+		        		size_label.setFill(Color.RED);
+		        		Text number = new Text(Integer.toString(gm.board[working_pit.place]));
+		        		//Text number = new Text(Integer.toString(working_pit.place));
+		        		number.setId("text_box_number");
+		        		
+		        		text_box.getChildren().addAll(size_label, number);
+		        		size_label.setId("temp");
+		        		root.getChildren().add(text_box);
+		        	}
+		        });
+		        
+		        working_pit.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
+		        	//when mouse exits pit, delete the text box created upon entry
+		        	@Override public void handle(MouseEvent event) {
+		        		javafx.scene.Node size_label = root.lookup("#temp_box");
+		        		root.getChildren().remove(size_label);
+		        		//destroy the object created when the mouse entered this pit
+		        	}
+		        });
+		        
+		        working_pit.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+		        	@Override public void handle(MouseEvent event) { 
+		        		//handle the pit being clicked on. Validate move, do a move... whatever, that's not my problem right now.
+		        		int move_result = gm.move(working_pit.place, player);
+		        		if (move_result < 2) {
+		        			//if move was successful
+	        				player = move_result;
+	        				
+	        				//empty or fill pits to correct size
+	        				for (Pit change_pit : pits) {
+	        					while (change_pit.size > gm.board[change_pit.place]) 
+	        						root.getChildren().remove(change_pit.removePiece());
+	        					while (change_pit.size < gm.board[change_pit.place])
+	        						root.getChildren().add(change_pit.addPiece());
+	        				}
+	        				
+	        				for (Store working_store : stores) {
+	        					while (working_store.size > gm.board[working_store.player * 7]) 
+	        						root.getChildren().remove(working_store.removePiece());
+	        					while (working_store.size < gm.board[working_store.player * 7])
+	        						root.getChildren().add(working_store.addPiece());
+	        				}
+	        				
+	        				//empty or fill stores to correct size
+	        				/*for (Store working : stores) {
+	        					while (working.size > gm.board[working.place]) 
+	        						root.getChildren().remove(working.removePiece());
+	        					while (working.size < gm.board[working.place])
+	        						root.getChildren().add(working.addPiece());
+	        				}*/
+	        				
+		        			/*javafx.scene.Node number_box = root.lookup("#temp_box");
+		        			if (number_box.getId() != null) {
+		        				working_pit.setFill(Color.BISQUE);
+		        				root.getChildren().remove(number_box);
+		        			}*/
+		        			
+		        		}
+		        	}
+		        });
+		        
+			}			
+			
+		}
+		return working;
+	}
+	
+	private Vector<Store> initializeStores(Pane root, GameManager gm) {
+		Vector<Store> working_vec = new Vector<Store>();
+		for (int i = 0; i < 2; i++) {
+			Store working = new Store(85 + (1 - i) * 910, 330, 70, 125, i);
+			working.setFill(i == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
+			root.getChildren().add(working);
+			working_vec.add(working);
+			
+	        working.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
+	        	//when mouse enters the pit, create a text box with the # of pieces in that pit above it.
+	        	@Override public void handle(MouseEvent event) {
+	        		//create new stack pane for the box, since these automatically center things
+	        		StackPane text_box = new StackPane();
+	        		text_box.setLayoutX(working.getCenterX() - 22.5);
+	        		text_box.setLayoutY(working.getCenterY() - 90);
+	        		text_box.setId("temp_box");
+
+	        		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
+	        		size_label.setFill(Color.RED);
+	        		Text number = new Text(Integer.toString(gm.board[working.player * 7]));
+	        		
+	        		text_box.getChildren().addAll(size_label, number);
+	        		size_label.setId("temp");
+	        		root.getChildren().add(text_box);
+	        		//something something create a text box above the pit when mouse is over it
+	        		//set the ID to something specific so that the mouse_exited item can remove it. 
+	        	}
+	        });
+	        
+	        working.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
+	        	//when mouse exits pit, delete the text box created upon entry
+	        	@Override public void handle(MouseEvent event) {
+	        		javafx.scene.Node size_label = root.lookup("#temp_box");
+	        		root.getChildren().remove(size_label);
+	        		//destroy the object created when the mouse entered this pit
+	        	}
+	        });
+		}
+		return working_vec;
+	}
+}
