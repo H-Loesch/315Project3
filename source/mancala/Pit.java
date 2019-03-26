@@ -19,7 +19,7 @@ public class Pit extends javafx.scene.shape.Circle{
 	//maybe some variable that notes if this pit has changed, and thus needs to be re-rendered?
 
 	//construct empty pit 
-	public Pit(int _x_loc, int _y_loc, int _place, int _player) {
+	public Pit(double _x_loc, double _y_loc, int _place, int _player) {
 		super(_x_loc, _y_loc, 55); //call constructor for circle 
 		player = _player;
 		place = _place;

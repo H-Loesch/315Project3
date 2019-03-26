@@ -1,5 +1,6 @@
 package mancala;
 
+import java.util.Random;
 import java.util.Vector;
 
 import javafx.application.Application;
@@ -15,17 +16,17 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 
-//decent widthfor each pit is about 3 mouse cursors wide. So that's about 100 pixels each. 
-//TODO find some way to center the mancala board regardless of the windows' size?
 //TODO make the GUI check each cycle *not* be terrible
-//TODO see about deleting objects instead of just removing them from the root pane's list (memory leak)
+//TODO see about deleting objects instead of just removing them from the root pane's list (memory leak?)
 //TODO improve placement for pieces inside stores
 //TODO Add displays: current player, each player's score; probably other things too 
-//TODO move color of pieces into the piece constructor, possibly some other stuff
+//TODO add pits and stores to a pane, then put that pane centered in the root window. 
 public class Test1 extends Application {
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
-	int player = 0; 
+	public int player = 0; 
+	public int numPits = 5;
+	private static Random key = new Random();
 	
 	public static void main(String[] args) {
 		launch(args);
@@ -38,6 +39,7 @@ public class Test1 extends Application {
 		root.setPrefSize(1080, 720);
 		root.setStyle("-fx-background-color: burlywood;");
 		
+		
 		GameManager gm = new GameManager();
 		pits = initializePits(root, gm);
 		stores = initializeStores(root, gm);
@@ -47,6 +49,7 @@ public class Test1 extends Application {
 				root.getChildren().add(pit.addPiece());
 			}
 		}
+		update_display(root, gm);
 		
 		//canvas.getChildren().addAll(placeInitialShapes(pits));
 		primary.setScene(new Scene(root)); //sets stage to show the scene
@@ -59,15 +62,17 @@ public class Test1 extends Application {
 		Vector<Pit> working = new Vector<Pit>();
 		/* 7 8 9 10 11 12
 		   1 2 3 4  5  6 */
-		for (int j = 1; j < 3; j++) {
-			for (int i = 1; i < 7; i++) {
+		for (int j = 1; j < numPits; j++) {
+			for (int i = 1; i <= numPits; i++) {
 				Pit working_pit;
 				if (j == 1) {
-					working_pit = new Pit(995 - i * 130, 260, i, 0);
+					//further player's pits; these are generated right-left
+					working_pit = new Pit(numPits * 130 + 85 - (i-1) * 130, 260, i, 0);
 					working_pit.setFill(Color.SADDLEBROWN);
 				}
 				else {
-					working_pit = new Pit(85 + 130 * i, 400, 7 + i, 1);
+					//closer player's pits; these are generated left-right
+					working_pit = new Pit(working.get(numPits-1).getCenterX() + 130 * (i-1), 400, numPits + i, 1);
 					working_pit.setFill(Color.DARKGOLDENROD);
 				}
 				working.add(working_pit);
@@ -112,19 +117,7 @@ public class Test1 extends Application {
 	        				player = move_result;
 	        				
 	        				//empty or fill pits to correct size
-	        				for (Pit change_pit : pits) {
-	        					while (change_pit.size > gm.board[change_pit.place]) 
-	        						root.getChildren().remove(change_pit.removePiece());
-	        					while (change_pit.size < gm.board[change_pit.place])
-	        						root.getChildren().add(change_pit.addPiece());
-	        				}
-	        				
-	        				for (Store working_store : stores) {
-	        					while (working_store.size > gm.board[working_store.player * 7]) 
-	        						root.getChildren().remove(working_store.removePiece());
-	        					while (working_store.size < gm.board[working_store.player * 7])
-	        						root.getChildren().add(working_store.addPiece());
-	        				}
+	        				update_display(root, gm);
 	        				
 	        				//empty or fill stores to correct size
 	        				/*for (Store working : stores) {
@@ -152,8 +145,11 @@ public class Test1 extends Application {
 	
 	private Vector<Store> initializeStores(Pane root, GameManager gm) {
 		Vector<Store> working_vec = new Vector<Store>();
+		double vertical_location = (pits.get(0).getCenterY() + pits.lastElement().getCenterY()) / 2.0;
+		
 		for (int i = 0; i < 2; i++) {
-			Store working = new Store(85 + (1 - i) * 910, 330, 70, 125, i);
+			double horizontal_location = (130 * Math.pow(-1,  i)) + pits.get((numPits-1) * (i)).getCenterX();
+			Store working = new Store(horizontal_location, vertical_location, 70, 125, i);
 			working.setFill(i == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
 			root.getChildren().add(working);
 			working_vec.add(working);
@@ -189,5 +185,21 @@ public class Test1 extends Application {
 	        });
 		}
 		return working_vec;
+	}
+	
+	void update_display(Pane root, GameManager gm) {
+		for (Pit change_pit : pits) {
+			while (change_pit.size > gm.board[change_pit.place]) 
+				root.getChildren().remove(change_pit.removePiece());
+			while (change_pit.size < gm.board[change_pit.place])
+				root.getChildren().add(change_pit.addPiece());
+		}
+		
+		for (Store working_store : stores) {
+			while (working_store.size > gm.board[working_store.player * numPits]) 
+				root.getChildren().remove(working_store.removePiece());
+			while (working_store.size < gm.board[working_store.player * numPits])
+				root.getChildren().add(working_store.addPiece());
+		}
 	}
 }
