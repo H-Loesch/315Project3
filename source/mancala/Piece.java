@@ -16,6 +16,8 @@ public class Piece extends javafx.scene.shape.Circle {
 	//TODO add more potential colors
 	Piece(double _x_loc, double _y_loc) {
 		super(_x_loc, _y_loc, 20);
+		this.setStroke(Color.BLACK);
+		this.setMouseTransparent(true);
 		
 		int color_key = key.nextInt(3);
 		switch(color_key) {

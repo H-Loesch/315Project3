@@ -28,9 +28,6 @@ public class Store extends Ellipse{
 		double y_loc = this.getCenterY() + key.nextInt((int) this.getRadiusY() + 1) - (this.getRadiusY() / 2);
 		
 		Piece new_piece = new Piece(x_loc, y_loc);
-		new_piece.setFill(Color.RED);
-		new_piece.setStroke(Color.BLACK);
-		new_piece.setMouseTransparent(true);
 		contents.add(new_piece);
 		size += 1;
 		
