@@ -1,7 +1,12 @@
 package mancala;
 
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Vector;
+
+import javax.swing.DefaultListModel;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 
 import javafx.application.Application;
 import javafx.event.Event;
@@ -21,13 +26,25 @@ import javafx.stage.Stage;
 //TODO improve placement for pieces inside stores
 //TODO Add displays: current player, each player's score; probably other things too 
 //TODO add pits and stores to a pane, then put that pane centered in the root window. 
+//TODO make GUI-based input check if a move is legal before sending it to the buffer.
 public class Test1 extends Application {
+////////////////////////////////////////////////////////////////////////////////////////////
+//Defining variables for object
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
+	//this buffer alerts an eventlistener every time it is changed.
+	private DefaultListModel<String> buffer = new DefaultListModel<String>();
 	public int player = 0; 
 	public int numPits = 5;
 	private static Random key = new Random();
-	
+	private GameManager gm = new GameManager();
+	Pane root = new Pane(); //root pane
+	Pane centerPiece = new Pane(); //the gameboard itself will be stored here
+	Scanner scanner = new Scanner(System.in); //used for system input 
+
+////////////////////////////////////////////////////////////////////////////////////////////
+//GUI management and main
+
 	public static void main(String[] args) {
 		launch(args);
 	}
@@ -35,12 +52,9 @@ public class Test1 extends Application {
 	@Override
 	public void start(Stage primary) throws Exception {
 		primary.setTitle("Mancala!");
-		Pane root = new Pane();
 		root.setPrefSize(1080, 720);
 		root.setStyle("-fx-background-color: burlywood;");
-		
-		
-		GameManager gm = new GameManager();
+				
 		pits = initializePits(root, gm);
 		stores = initializeStores(root, gm);
 		root.getChildren().addAll(pits);
@@ -54,8 +68,18 @@ public class Test1 extends Application {
 		//canvas.getChildren().addAll(placeInitialShapes(pits));
 		primary.setScene(new Scene(root)); //sets stage to show the scene
  		primary.show(); //shows the scene in the newly-created application
+ 		
+ ////////////////////////////////////////////////////////////////////////////////////////////
+ //Non-GUI operation
+ 	    
+ 		//this buffer vector updates whenever 
+ 	    buffer.addListDataListener(new BufferListener());
+ 	    Server honk = new Server(buffer); //placeholder, for now
 	}
 	
+	
+////////////////////////////////////////////////////////////////////////////////////////////
+//Helper functions	
 	private Vector<Pit> initializePits(Pane root, GameManager gm) {
 		//initialize location, all that for the pits. 
 		//don't yet initialize the stones that will go in them. Or maybe do, idk.
@@ -202,4 +226,37 @@ public class Test1 extends Application {
 				root.getChildren().add(working_store.addPiece());
 		}
 	}
+	
+	//handle them gosh darn inputs!
+	//move this to game manager probably. or don't, see if I care.
+	void handle_inputs(String[] _args, String intent) {
+		if (intent == "move") {
+				
+		} else if (intent == "info") {
+			
+		} else if (intent == "ack") {
+			
+		} else if (intent == "game_config") {
+			
+		}
+	}
+	
+	class BufferListener implements ListDataListener {
+		public void contentsChanged(ListDataEvent e) {
+			//what happens when something more complex happens to this list?
+			System.out.println("whoa");
+		} 
+		public void intervalAdded(ListDataEvent e) {
+			//what happens when something is added to list?
+			System.out.println("added");
+			//pass that string along to gm.handle_input()
+			//update_display()
+			//remove that string from gm.handle_input()
+		}
+		public void intervalRemoved(ListDataEvent e) {
+			//what happens when something is removed from list?
+			System.out.println("removed");
+		}
+	}
+	
 }
