@@ -9,9 +9,9 @@ public class GameManager {
 	public int playerWon = -1;
 	Scanner scanner = new Scanner(System.in);
 
-	GameManager(int numPits) { //initializes board
-		for(int i = 1; i < numPits * 2; i++) { //skip player's kala at 0
-			if(i == numPits)
+	GameManager() { //initializes board
+		for(int i = 1; i < 14; i++) { //skip player's kala at 0
+			if(i == 7)
 				i++;			//skip AI's kala at 7
 			board[i] = 4;
 		}
