@@ -21,13 +21,20 @@ import javafx.stage.Stage;
 //TODO improve placement for pieces inside stores
 //TODO Add displays: current player, each player's score; probably other things too 
 //TODO add pits and stores to a pane, then put that pane centered in the root window. 
+//TODO re-add update_display somewhere in the server/client handling
 public class Test1 extends Application {
+////////////////////////////////////////////////////////////////////////////////////////////
+	//Defining variables for object
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
 	public int player = 0; 
 	public int numPits = 5;
 	private static Random key = new Random();
+	private GameManager gm = new GameManager(numPits);
+	Pane root;
 	
+////////////////////////////////////////////////////////////////////////////////////////////
+//GUI management and main
 	public static void main(String[] args) {
 		launch(args);
 	}
@@ -35,12 +42,10 @@ public class Test1 extends Application {
 	@Override
 	public void start(Stage primary) throws Exception {
 		primary.setTitle("Mancala!");
-		Pane root = new Pane();
+		root = new Pane();
 		root.setPrefSize(1080, 720);
 		root.setStyle("-fx-background-color: burlywood;");
 		
-		
-		GameManager gm = new GameManager();
 		pits = initializePits(root, gm);
 		stores = initializeStores(root, gm);
 		root.getChildren().addAll(pits);
@@ -49,13 +54,23 @@ public class Test1 extends Application {
 				root.getChildren().add(pit.addPiece());
 			}
 		}
-		update_display(root, gm);
+		update_display();
 		
 		//canvas.getChildren().addAll(placeInitialShapes(pits));
 		primary.setScene(new Scene(root)); //sets stage to show the scene
  		primary.show(); //shows the scene in the newly-created application
+ 		
+ ////////////////////////////////////////////////////////////////////////////////////////////
+ //Non-GUI operation
+ 		int num = 5;
+ 		while (num < 8) {
+			System.out.println("\ninput move: ");
+			num += 1;
+ 		}
 	}
 	
+////////////////////////////////////////////////////////////////////////////////////////////
+//Helper functions	
 	private Vector<Pit> initializePits(Pane root, GameManager gm) {
 		//initialize location, all that for the pits. 
 		//don't yet initialize the stones that will go in them. Or maybe do, idk.
@@ -67,75 +82,18 @@ public class Test1 extends Application {
 				Pit working_pit;
 				if (j == 1) {
 					//further player's pits; these are generated right-left
-					working_pit = new Pit(numPits * 130 + 85 - (i-1) * 130, 260, i, 0);
+					working_pit = new Pit(numPits * 130 + 85 - (i-1) * 130, 260, i, 0, gm, root);
 					working_pit.setFill(Color.SADDLEBROWN);
 				}
 				else {
 					//closer player's pits; these are generated left-right
-					working_pit = new Pit(working.get(numPits-1).getCenterX() + 130 * (i-1), 400, numPits + i, 1);
+					working_pit = new Pit(working.get(numPits-1).getCenterX() + 130 * (i-1), 400, numPits + i, 1, gm, root);
 					working_pit.setFill(Color.DARKGOLDENROD);
 				}
 				working.add(working_pit);
 
 				//Event handlers for the mouse hovering over, leaving the area of, and clicking on the pits
 				//These could... probably be moved to the constructor for pits, maybe?
-		        working_pit.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
-		        	@Override public void handle(MouseEvent event) {
-		        		//create new stack pane for the box, since these automatically center things
-		        		StackPane text_box = new StackPane();
-		        		text_box.setLayoutX(working_pit.getCenterX() - 22.5);
-		        		text_box.setLayoutY(working_pit.getCenterY() - 90);
-		        		text_box.setId("temp_box");
-
-		        		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
-		        		size_label.setFill(Color.RED);
-		        		Text number = new Text(Integer.toString(gm.board[working_pit.place]));
-		        		//Text number = new Text(Integer.toString(working_pit.place));
-		        		number.setId("text_box_number");
-		        		
-		        		text_box.getChildren().addAll(size_label, number);
-		        		size_label.setId("temp");
-		        		root.getChildren().add(text_box);
-		        	}
-		        });
-		        
-		        working_pit.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
-		        	//when mouse exits pit, delete the text box created upon entry
-		        	@Override public void handle(MouseEvent event) {
-		        		javafx.scene.Node size_label = root.lookup("#temp_box");
-		        		root.getChildren().remove(size_label);
-		        		//destroy the object created when the mouse entered this pit
-		        	}
-		        });
-		        
-		        working_pit.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-		        	@Override public void handle(MouseEvent event) { 
-		        		//handle the pit being clicked on. Validate move, do a move... whatever, that's not my problem right now.
-		        		int move_result = gm.move(working_pit.place, player);
-		        		if (move_result < 2) {
-		        			//if move was successful
-	        				player = move_result;
-	        				
-	        				//empty or fill pits to correct size
-	        				update_display(root, gm);
-	        				
-	        				//empty or fill stores to correct size
-	        				/*for (Store working : stores) {
-	        					while (working.size > gm.board[working.place]) 
-	        						root.getChildren().remove(working.removePiece());
-	        					while (working.size < gm.board[working.place])
-	        						root.getChildren().add(working.addPiece());
-	        				}*/
-	        				
-		        			/*javafx.scene.Node number_box = root.lookup("#temp_box");
-		        			if (number_box.getId() != null) {
-		        				working_pit.setFill(Color.BISQUE);
-		        				root.getChildren().remove(number_box);
-		        			}*/
-		        			
-		        		}
-		        	}
-		        });
 		        
 			}			
 			
@@ -187,7 +145,7 @@ public class Test1 extends Application {
 		return working_vec;
 	}
 	
-	void update_display(Pane root, GameManager gm) {
+	void update_display() {
 		for (Pit change_pit : pits) {
 			while (change_pit.size > gm.board[change_pit.place]) 
 				root.getChildren().remove(change_pit.removePiece());

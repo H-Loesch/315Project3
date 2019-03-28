@@ -3,6 +3,7 @@ package mancala;
 import java.util.Random;
 import java.util.Vector;
 
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Ellipse;
 
@@ -13,6 +14,8 @@ import javafx.scene.shape.Ellipse;
 public class Store extends Ellipse{
 	public int player;
 	public int size;
+	private GameManager gm;
+	private Pane root;
 	private static Random key = new Random();
 	private Vector<Piece> contents;
 	
