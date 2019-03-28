@@ -73,13 +73,14 @@ public class Test1 extends Application {
  //Non-GUI operation
  	    
  		//this buffer vector updates whenever 
- 	    buffer.addListDataListener(new BufferListener());
+ 	    buffer.addListDataListener(new BufferListener(buffer));
  	    Server honk = new Server(buffer); //placeholder, for now
+ 	    //server/client stuff goes here 
 	}
 	
 	
 ////////////////////////////////////////////////////////////////////////////////////////////
-//Helper functions	
+//Initialization of GUI objects, with their event handlers 	
 	private Vector<Pit> initializePits(Pane root, GameManager gm) {
 		//initialize location, all that for the pits. 
 		//don't yet initialize the stones that will go in them. Or maybe do, idk.
@@ -135,29 +136,10 @@ public class Test1 extends Application {
 		        working_pit.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 		        	@Override public void handle(MouseEvent event) { 
 		        		//handle the pit being clicked on. Validate move, do a move... whatever, that's not my problem right now.
-		        		int move_result = gm.move(working_pit.place, player);
-		        		if (move_result < 2) {
-		        			//if move was successful
-	        				player = move_result;
-	        				
-	        				//empty or fill pits to correct size
-	        				update_display(root, gm);
-	        				
-	        				//empty or fill stores to correct size
-	        				/*for (Store working : stores) {
-	        					while (working.size > gm.board[working.place]) 
-	        						root.getChildren().remove(working.removePiece());
-	        					while (working.size < gm.board[working.place])
-	        						root.getChildren().add(working.addPiece());
-	        				}*/
-	        				
-		        			/*javafx.scene.Node number_box = root.lookup("#temp_box");
-		        			if (number_box.getId() != null) {
-		        				working_pit.setFill(Color.BISQUE);
-		        				root.getChildren().remove(number_box);
-		        			}*/
-		        			
-		        		}
+		        		//check if move is legal here, or something? 
+
+		        		//add that move to the buffer
+		        		buffer.addElement( Integer.toString(working_pit.place));
 		        	}
 		        });
 		        
@@ -211,6 +193,10 @@ public class Test1 extends Application {
 		return working_vec;
 	}
 	
+	
+////////////////////////////////////////////////////////////////////////////////////////////
+//Other helpers 	
+
 	void update_display(Pane root, GameManager gm) {
 		for (Pit change_pit : pits) {
 			while (change_pit.size > gm.board[change_pit.place]) 
@@ -227,29 +213,48 @@ public class Test1 extends Application {
 		}
 	}
 	
-	//handle them gosh darn inputs!
-	//move this to game manager probably. or don't, see if I care.
-	void handle_inputs(String[] _args, String intent) {
-		if (intent == "move") {
-				
-		} else if (intent == "info") {
-			
-		} else if (intent == "ack") {
-			
-		} else if (intent == "game_config") {
-			
-		}
-	}
-	
 	class BufferListener implements ListDataListener {
+		DefaultListModel<String> target; //the buffer of strings that is our buffer
+		BufferListener(DefaultListModel<String> _target) {
+			super();
+			target = _target;
+		}
 		public void contentsChanged(ListDataEvent e) {
 			//what happens when something more complex happens to this list?
 			System.out.println("whoa");
 		} 
 		public void intervalAdded(ListDataEvent e) {
 			//what happens when something is added to list?
+			//peel off first item, split it, 
 			System.out.println("added");
-			//handling of some acknowledgements should probably go here
+			String[] args = target.get(0).split(" "); 
+			
+			//acknowledgements handling 
+			if (args[0] == "WELCOME") {
+				
+			} else if (args[0] == "READY") {
+				
+			} else if (args[0] == "OK") {
+				
+			} else if (args[0] == "ILLEGAL") {
+				
+			} else if (args[0] == "TIME") {
+				
+			} else if (args[0] == "LOSER") {
+				
+			} else if (args[0] == "WINNER") {
+				
+			} else if (args[0] == "TIE") {
+				
+			//moves and configuration
+			} else {
+				String response = gm.handle_input(args);
+				//if first argument is a number, then this is a move; pass to game manager
+			} 
+				
+			update_display(root, gm);
+			buffer.remove(0);
+			//handling of some acknowledgments should probably go here
 			//else, send them off to the game manager! woo! 
 			
 			//pass that string along to gm.handle_input()

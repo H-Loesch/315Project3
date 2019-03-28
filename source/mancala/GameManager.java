@@ -213,13 +213,18 @@ public class GameManager {
 	String handle_input(String[] input_arr) {
 		//probably something that involves checking for input
 		if (input_arr[0] == "INFO") {
+			return "placeholder ;)";
+
 			//do game setup stuff
 			//store the initial setup stuff in the game manager itself, then use that in main to figure everything else out
 			//this will also necessitate moving gm initialization out of its constructor
 		} else if (input_arr[0] == "P"){
 			// pie rule
+			return "placeholder ;)";
+
 			//....handle the pie rule? idk bud
 		} else if (input_arr[0].matches("^[0-9]*$")) {
+			System.out.println("Player's " + player + " turn");
 			//if first char is a number (regular ol' move)
 			for (int i = 0; i < input_arr.length; i++) {
 				//move will have to be adjusted for this to work: make the error code actually work
@@ -227,13 +232,16 @@ public class GameManager {
 				if (result == 0 || result == 1) {
 					//return a player, move successful; this should also make subsequent moves from the same input return illegal
 					player = result;
+					return "OK";
 				} else {
 					//returned 2, move failed
 					return "ILLEGAL";
 				}
 			}
-		}
 		return "placeholder ;)";
+		} else {
+			return "placeholder ;)";
+		}
 	}
 
 }
