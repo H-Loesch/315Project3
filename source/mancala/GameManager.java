@@ -8,6 +8,9 @@ public class GameManager {
 	public int player = 0;
 	public int playerWon = -1;
 	Scanner scanner = new Scanner(System.in);
+	private int numPits = 6;
+	private int numPieces = 4;
+	private int initialSetup;
 
 	GameManager() { //initializes board
 		for(int i = 1; i < 14; i++) { //skip player's kala at 0
@@ -16,6 +19,8 @@ public class GameManager {
 			board[i] = 4;
 		}
 	}
+	
+	//TODO alternate constructor here with non-standard pit #, seed #, seed distribution (other stuff?)
 
 	void run() {
 		boolean legal = false;
@@ -30,7 +35,7 @@ public class GameManager {
 			legal = legalMove(selection, player);
 		}
 		//legal move made
-		move(selection, player);
+		player = move(selection, player);
 
 		//check game over state
 		if(!playerHasStones() || !computerHasStones()) {
@@ -39,12 +44,6 @@ public class GameManager {
 
 
 		}
-
-		//switch players
-		if(player == 0)
-			player = 1;
-		else
-			player = 0;
 
 		run();  //continue to run
 	}
@@ -204,6 +203,37 @@ public class GameManager {
 			System.out.print(board[i] + " | ");
 		}
 		System.out.println();
+	}
+	
+	//illegal moves should still go here, and then return smth that stops the play loop
+	
+	//this returns a string: "OK" if move is okay, go ahead and grab the next input
+	//"END" for when game is over due to regular play 
+	//"ILLEGAL" if, well. if illegal lol. I'm a lil too tired to be planning out structural stuff I think.
+	String handle_input(String[] input_arr) {
+		//probably something that involves checking for input
+		if (input_arr[0] == "INFO") {
+			//do game setup stuff
+			//store the initial setup stuff in the game manager itself, then use that in main to figure everything else out
+			//this will also necessitate moving gm initialization out of its constructor
+		} else if (input_arr[0] == "P"){
+			// pie rule
+			//....handle the pie rule? idk bud
+		} else if (input_arr[0].matches("^[0-9]*$")) {
+			//if first char is a number (regular ol' move)
+			for (int i = 0; i < input_arr.length; i++) {
+				//move will have to be adjusted for this to work: make the error code actually work
+				int result = this.move(Integer.parseInt(input_arr[i]),  player); //do that move until there are no moves remaining
+				if (result == 0 || result == 1) {
+					//return a player, move successful; this should also make subsequent moves from the same input return illegal
+					player = result;
+				} else {
+					//returned 2, move failed
+					return "ILLEGAL";
+				}
+			}
+		}
+		return "placeholder ;)";
 	}
 
 }

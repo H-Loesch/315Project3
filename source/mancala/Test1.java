@@ -249,6 +249,9 @@ public class Test1 extends Application {
 		public void intervalAdded(ListDataEvent e) {
 			//what happens when something is added to list?
 			System.out.println("added");
+			//handling of some acknowledgements should probably go here
+			//else, send them off to the game manager! woo! 
+			
 			//pass that string along to gm.handle_input()
 			//update_display()
 			//remove that string from gm.handle_input()
