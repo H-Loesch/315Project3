@@ -27,6 +27,7 @@ import javafx.stage.Stage;
 //TODO Add displays: current player, each player's score; probably other things too 
 //TODO add pits and stores to a pane, then put that pane centered in the root window. 
 //TODO make GUI-based input check if a move is legal before sending it to the buffer.
+
 public class Test1 extends Application {
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Defining variables for object
@@ -40,7 +41,6 @@ public class Test1 extends Application {
 	private GameManager gm = new GameManager();
 	Pane root = new Pane(); //root pane
 	Pane centerPiece = new Pane(); //the gameboard itself will be stored here
-	Scanner scanner = new Scanner(System.in); //used for system input 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //GUI management and main
@@ -70,17 +70,97 @@ public class Test1 extends Application {
  		primary.show(); //shows the scene in the newly-created application
  		
  ////////////////////////////////////////////////////////////////////////////////////////////
- //Non-GUI operation
+ //Different bits: the client and the server app are different here 
  	    
  		//this buffer vector updates whenever 
  	    buffer.addListDataListener(new BufferListener(buffer));
- 	    Server honk = new Server(buffer); //placeholder, for now
+ 	    Remote honk = new Remote(buffer, 5); //placeholder, for now
  	    //server/client stuff goes here 
 	}
 	
+	class BufferListener implements ListDataListener {
+		DefaultListModel<String> target; //the buffer of strings that is our buffer
+		BufferListener(DefaultListModel<String> _target) {
+			super();
+			target = _target;
+		}
+		public void contentsChanged(ListDataEvent e) {
+			//what happens when something more complex happens to this list?
+			System.out.println("whoa lmao");
+		} 
+		public void intervalAdded(ListDataEvent e) {
+			//what happens when something is added to list?
+			//peel off first item, split it, 
+			System.out.println("added");
+			String[] args = target.get(0).split(" ");
+			
+			if (true) {
+				//we're a server
+				//acknowledgements handling 
+				if (args[0] == "WELCOME") {
+					
+				} else if (args[0] == "READY") {
+					
+				} else if (args[0] == "OK") {
+					
+				} else if (args[0] == "ILLEGAL") {
+					
+				} else if (args[0] == "TIME") {
+					
+				} else if (args[0] == "LOSER") {
+					
+				} else if (args[0] == "WINNER") {
+					
+				} else if (args[0] == "TIE") {
+					
+				//moves and configuration
+				} else {
+					String response = gm.handle_input(args);
+					//if first argument is a number, then this is a move; pass to game manager
+				} 
+			} else {
+				//we're a client 
+				if (args[0] == "WELCOME") {
+					
+				} else if (args[0] == "READY") {
+					
+				} else if (args[0] == "OK") {
+					
+				} else if (args[0] == "ILLEGAL") {
+					
+				} else if (args[0] == "TIME") {
+					
+				} else if (args[0] == "LOSER") {
+					
+				} else if (args[0] == "WINNER") {
+					
+				} else if (args[0] == "TIE") {
+					
+				//moves and configuration
+				} else {
+					String response = gm.handle_input(args);
+					//if first argument is a number, then this is a move; pass to game manager
+				} 
+			}
+			
+				
+			update_display(root, gm);
+			buffer.remove(0);
+			//handling of some acknowledgments should probably go here
+			//else, send them off to the game manager! woo! 
+			
+			//pass that string along to gm.handle_input()
+			//update_display()
+			//remove that string from gm.handle_input()
+		}
+		public void intervalRemoved(ListDataEvent e) {
+			//what happens when something is removed from list?
+			System.out.println("removed");
+		}
+	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////
-//Initialization of GUI objects, with their event handlers 	
+//Shared init Methods	
 	private Vector<Pit> initializePits(Pane root, GameManager gm) {
 		//initialize location, all that for the pits. 
 		//don't yet initialize the stones that will go in them. Or maybe do, idk.
@@ -121,9 +201,8 @@ public class Test1 extends Application {
 		return working_vec;
 	}
 	
-	
 ////////////////////////////////////////////////////////////////////////////////////////////
-//Other helpers 	
+//Shared Other Methods	
 
 	void update_display(Pane root, GameManager gm) {
 		for (Pit change_pit : pits) {
@@ -138,60 +217,6 @@ public class Test1 extends Application {
 				root.getChildren().remove(working_store.removePiece());
 			while (working_store.size < gm.board[working_store.player * numPits])
 				root.getChildren().add(working_store.addPiece());
-		}
-	}
-	
-	class BufferListener implements ListDataListener {
-		DefaultListModel<String> target; //the buffer of strings that is our buffer
-		BufferListener(DefaultListModel<String> _target) {
-			super();
-			target = _target;
-		}
-		public void contentsChanged(ListDataEvent e) {
-			//what happens when something more complex happens to this list?
-			System.out.println("whoa");
-		} 
-		public void intervalAdded(ListDataEvent e) {
-			//what happens when something is added to list?
-			//peel off first item, split it, 
-			System.out.println("added");
-			String[] args = target.get(0).split(" "); 
-			
-			//acknowledgements handling 
-			if (args[0] == "WELCOME") {
-				
-			} else if (args[0] == "READY") {
-				
-			} else if (args[0] == "OK") {
-				
-			} else if (args[0] == "ILLEGAL") {
-				
-			} else if (args[0] == "TIME") {
-				
-			} else if (args[0] == "LOSER") {
-				
-			} else if (args[0] == "WINNER") {
-				
-			} else if (args[0] == "TIE") {
-				
-			//moves and configuration
-			} else {
-				String response = gm.handle_input(args);
-				//if first argument is a number, then this is a move; pass to game manager
-			} 
-				
-			update_display(root, gm);
-			buffer.remove(0);
-			//handling of some acknowledgments should probably go here
-			//else, send them off to the game manager! woo! 
-			
-			//pass that string along to gm.handle_input()
-			//update_display()
-			//remove that string from gm.handle_input()
-		}
-		public void intervalRemoved(ListDataEvent e) {
-			//what happens when something is removed from list?
-			System.out.println("removed");
 		}
 	}
 	
