@@ -92,57 +92,15 @@ public class Test1 extends Application {
 				Pit working_pit;
 				if (j == 1) {
 					//further player's pits; these are generated right-left
-					working_pit = new Pit(numPits * 130 + 85 - (i-1) * 130, 260, i, 0);
+					working_pit = new Pit(numPits * 130 + 85 - (i-1) * 130, 260, i, 0, gm, root, buffer);
 					working_pit.setFill(Color.SADDLEBROWN);
 				}
 				else {
 					//closer player's pits; these are generated left-right
-					working_pit = new Pit(working.get(numPits-1).getCenterX() + 130 * (i-1), 400, numPits + i, 1);
+					working_pit = new Pit(working.get(numPits-1).getCenterX() + 130 * (i-1), 400, numPits + i, 1,  gm, root, buffer);
 					working_pit.setFill(Color.DARKGOLDENROD);
 				}
 				working.add(working_pit);
-
-				//Event handlers for the mouse hovering over, leaving the area of, and clicking on the pits
-				//These could... probably be moved to the constructor for pits, maybe?
-		        working_pit.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
-		        	@Override public void handle(MouseEvent event) {
-		        		//create new stack pane for the box, since these automatically center things
-		        		StackPane text_box = new StackPane();
-		        		text_box.setLayoutX(working_pit.getCenterX() - 22.5);
-		        		text_box.setLayoutY(working_pit.getCenterY() - 90);
-		        		text_box.setId("temp_box");
-
-		        		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
-		        		size_label.setFill(Color.RED);
-		        		Text number = new Text(Integer.toString(gm.board[working_pit.place]));
-		        		//Text number = new Text(Integer.toString(working_pit.place));
-		        		number.setId("text_box_number");
-		        		
-		        		text_box.getChildren().addAll(size_label, number);
-		        		size_label.setId("temp");
-		        		root.getChildren().add(text_box);
-		        	}
-		        });
-		        
-		        working_pit.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
-		        	//when mouse exits pit, delete the text box created upon entry
-		        	@Override public void handle(MouseEvent event) {
-		        		javafx.scene.Node size_label = root.lookup("#temp_box");
-		        		root.getChildren().remove(size_label);
-		        		//destroy the object created when the mouse entered this pit
-		        	}
-		        });
-		        
-		        working_pit.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-		        	@Override public void handle(MouseEvent event) { 
-		        		//handle the pit being clicked on. Validate move, do a move... whatever, that's not my problem right now.
-		        		//check if move is legal here, or something? 
-
-		        		//add that move to the buffer
-		        		buffer.addElement( Integer.toString(working_pit.place));
-		        	}
-		        });
-		        
 			}			
 			
 		}
@@ -155,40 +113,10 @@ public class Test1 extends Application {
 		
 		for (int i = 0; i < 2; i++) {
 			double horizontal_location = (130 * Math.pow(-1,  i)) + pits.get((numPits-1) * (i)).getCenterX();
-			Store working = new Store(horizontal_location, vertical_location, 70, 125, i);
+			Store working = new Store(horizontal_location, vertical_location, 70, 125, i, null, null, null);
 			working.setFill(i == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
 			root.getChildren().add(working);
 			working_vec.add(working);
-			
-	        working.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
-	        	//when mouse enters the pit, create a text box with the # of pieces in that pit above it.
-	        	@Override public void handle(MouseEvent event) {
-	        		//create new stack pane for the box, since these automatically center things
-	        		StackPane text_box = new StackPane();
-	        		text_box.setLayoutX(working.getCenterX() - 22.5);
-	        		text_box.setLayoutY(working.getCenterY() - 90);
-	        		text_box.setId("temp_box");
-
-	        		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
-	        		size_label.setFill(Color.RED);
-	        		Text number = new Text(Integer.toString(gm.board[working.player * 7]));
-	        		
-	        		text_box.getChildren().addAll(size_label, number);
-	        		size_label.setId("temp");
-	        		root.getChildren().add(text_box);
-	        		//something something create a text box above the pit when mouse is over it
-	        		//set the ID to something specific so that the mouse_exited item can remove it. 
-	        	}
-	        });
-	        
-	        working.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
-	        	//when mouse exits pit, delete the text box created upon entry
-	        	@Override public void handle(MouseEvent event) {
-	        		javafx.scene.Node size_label = root.lookup("#temp_box");
-	        		root.getChildren().remove(size_label);
-	        		//destroy the object created when the mouse entered this pit
-	        	}
-	        });
 		}
 		return working_vec;
 	}
