@@ -32,17 +32,22 @@ import javafx.stage.Stage;
 public class Test1 extends Application {
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Defining variables for object
+    static final int MAX_T = 2;              
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
 	//this buffer alerts an eventlistener every time it is changed.
 	private DefaultListModel<String> buffer = new DefaultListModel<String>();
-	public int player = 0; 
-	public int numPits = 5;
+	public int player = 0; //is this still needed?
+	public int numPits = 5; //is this still needed?
 	private static Random key = new Random();
 	private GameManager gm = new GameManager();
 	Pane root = new Pane(); //root pane
 	Pane centerPiece = new Pane(); //the gameboard itself will be stored here
 	static String config;
+	RemoteTask server_write = new RemoteTask(buffer, "write");
+	RemoteTask server_read = new RemoteTask(buffer, "read");
+	RemoteTask server_general = new RemoteTask(buffer, "");
+	
 ////////////////////////////////////////////////////////////////////////////////////////////
 //GUI management and main
 
@@ -82,11 +87,10 @@ public class Test1 extends Application {
  	    buffer.addListDataListener(new BufferListener(buffer));
  	    if (config == "server") {
  	    	//set remove as server
- 	 	    RemoteTask honk = new RemoteTask(buffer, 80); //placeholder, for now
-
+ 	    	server_general.run(80);
  	    } else if (config == "client") {
  	    	//set remote as client 
- 	    	RemoteTask honk = new RemoteTask(buffer, 80, InetAddress.getLocalHost().getHostName()); //calls windows "hostname" function; for local connection
+ 	    	server_general.run(80, InetAddress.getLocalHost().getHostName());
  	    } else {
  	    	//well now what's happening here...
  	    }
