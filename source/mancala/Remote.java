@@ -15,21 +15,20 @@ public class Remote {
 	PrintWriter remote_writer;
 	BufferedReader remote_reader;
 	DefaultListModel<String> buffer;
+	Socket remoteSocket;
+	ServerSocket listenSocket;
+	String config;
 	
 	Remote(DefaultListModel<String> _buffer, int port) {
 		//initialize as server
 		buffer = _buffer;
+		config = "server";
 		try {
-			ServerSocket remoteSocket = new ServerSocket(port); 
-			Socket clientSocket = remoteSocket.accept();
-			PrintWriter remote_writer = new PrintWriter(clientSocket.getOutputStream());
-			BufferedReader remote_reader = new BufferedReader( new InputStreamReader(clientSocket.getInputStream()));
+			ServerSocket listenSocket = new ServerSocket(port); 
+			Socket clientSocket = listenSocket.accept();
+			remote_writer = new PrintWriter(clientSocket.getOutputStream());
+			remote_reader = new BufferedReader( new InputStreamReader(clientSocket.getInputStream()));
 			
-			String inputLine;
-			while ((inputLine = remote_reader.readLine()) != null) {
-				buffer.addElement(inputLine); //just add the thing to the thing... let's see what happens
-				//something something have an end condition here or something
-			}
 		}
         catch (IOException e) { 
 			System.out.println("oof. Something went wrong.");
@@ -39,15 +38,12 @@ public class Remote {
 	Remote(DefaultListModel<String> _buffer, int port, String hostname) {
 		//initialize as client
 		buffer = _buffer;
+		config = "client";
 		try {
 			Socket remoteSocket = new Socket(hostname, port); 
 			remote_writer = new PrintWriter(remoteSocket.getOutputStream());
 			remote_reader = new BufferedReader( new InputStreamReader(remoteSocket.getInputStream()));
-			
-			String inputLine; 
-			while ((inputLine = remote_reader.readLine()) != null) {
-				buffer.addElement(inputLine);
-			}
+
 		}
 		catch (IOException e) { 
 
@@ -55,13 +51,36 @@ public class Remote {
 	}
 	
 	//write to whatever the remote is connecting to right now
-	public void write(String write_string) {
+	public void write(String write_string	) {
 		remote_writer.write(write_string);
 	}
 	
-	//remove this probably
-	public String read() {
+	//Reads a line from remote, and writes to the local buffer.
+	public void read() {
 		//read until end of line
-		return "honk";
+		try {
+			buffer.addElement( remote_reader.readLine());
+		} catch (IOException e) {
+			//will an empty line cause this? who knows!
+			System.out.println("Reading from remote server failed.");
+		}
+	}
+	
+	//could probably just remove the if/else, and let try/catch handle listenSocket failure if we're a client
+	public void close() {
+		if (config == "server") {
+			try {
+				if (config == "server") {
+					remoteSocket.close();
+					listenSocket.close();
+				} else if (config == "client") {
+					remoteSocket.close();
+				} else {
+					//uh...okay
+				}
+			} catch (IOException e) {
+				//uh... failed to close. okay.
+			}
+		}
 	}
 }

@@ -1,5 +1,6 @@
 package mancala;
 
+import java.net.InetAddress;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Vector;
@@ -41,11 +42,16 @@ public class Test1 extends Application {
 	private GameManager gm = new GameManager();
 	Pane root = new Pane(); //root pane
 	Pane centerPiece = new Pane(); //the gameboard itself will be stored here
-
+	static String config;
 ////////////////////////////////////////////////////////////////////////////////////////////
 //GUI management and main
 
 	public static void main(String[] args) {
+		try {
+			config = args[2]; //are we client or server?
+		} catch (ArrayIndexOutOfBoundsException e) {
+			config = "server";
+		}
 		launch(args);
 	}
 
@@ -74,7 +80,16 @@ public class Test1 extends Application {
  	    
  		//this buffer vector updates whenever 
  	    buffer.addListDataListener(new BufferListener(buffer));
- 	    Remote honk = new Remote(buffer, 5); //placeholder, for now
+ 	    if (config == "server") {
+ 	    	//set remove as server
+ 	 	    Remote honk = new Remote(buffer, 80); //placeholder, for now
+
+ 	    } else if (config == "client") {
+ 	    	//set remote as client 
+ 	    	Remote honk = new Remote(buffer, 80, InetAddress.getLocalHost().getHostName()); //calls windows "hostname" function; for local connection
+ 	    } else {
+ 	    	//well now what's happening here...
+ 	    }
  	    //server/client stuff goes here 
 	}
 	
