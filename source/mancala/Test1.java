@@ -82,11 +82,11 @@ public class Test1 extends Application {
  	    buffer.addListDataListener(new BufferListener(buffer));
  	    if (config == "server") {
  	    	//set remove as server
- 	 	    Remote honk = new Remote(buffer, 80); //placeholder, for now
+ 	 	    RemoteTask honk = new RemoteTask(buffer, 80); //placeholder, for now
 
  	    } else if (config == "client") {
  	    	//set remote as client 
- 	    	Remote honk = new Remote(buffer, 80, InetAddress.getLocalHost().getHostName()); //calls windows "hostname" function; for local connection
+ 	    	RemoteTask honk = new RemoteTask(buffer, 80, InetAddress.getLocalHost().getHostName()); //calls windows "hostname" function; for local connection
  	    } else {
  	    	//well now what's happening here...
  	    }
