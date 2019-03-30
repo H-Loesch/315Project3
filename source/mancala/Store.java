@@ -26,11 +26,15 @@ public class Store extends Ellipse{
 	private DefaultListModel<String> buffer;
 	private static Random key = new Random();
 	private Vector<Piece> contents;
+	Pane container;
 	
 	Store(double _x_loc, double _y_loc, double _x_size, double _y_size, int _player, GameManager _gm, Pane _root, DefaultListModel<String> _buffer) {
 		super(_x_loc, _y_loc, _x_size, _y_size);
 		player = _player;
 		contents = new Vector<Piece>();
+		gm = _gm;
+		root = _root;
+		buffer = _buffer;
 		
         addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
         	//when mouse enters the pit, create a text box with the # of pieces in that pit above it.
@@ -43,10 +47,10 @@ public class Store extends Ellipse{
 
         		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
         		size_label.setFill(Color.RED);
-        		Text number = new Text(Integer.toString(gm.board[player * 7]));
+        		Text number = new Text(Integer.toString(gm.board[player * (gm.numPits + 1)]));
         		
         		text_box.getChildren().addAll(size_label, number);
-        		size_label.setId("temp");
+        		size_label.setId("temp_box");
         		root.getChildren().add(text_box);
         		//something something create a text box above the pit when mouse is over it
         		//set the ID to something specific so that the mouse_exited item can remove it. 
