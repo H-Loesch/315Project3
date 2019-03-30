@@ -4,6 +4,8 @@ import java.net.InetAddress;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.DefaultListModel;
 import javax.swing.event.ListDataEvent;
@@ -31,22 +33,25 @@ import javafx.stage.Stage;
 
 public class Test1 extends Application {
 ////////////////////////////////////////////////////////////////////////////////////////////
-//Defining variables for object
-    static final int MAX_T = 2;              
+//Defining variables for our overall application. god there's so many. 
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
 	//this buffer alerts an eventlistener every time it is changed.
-	private DefaultListModel<String> buffer = new DefaultListModel<String>();
 	public int player = 0; //is this still needed?
 	public int numPits = 5; //is this still needed?
 	private static Random key = new Random();
+	
 	private GameManager gm = new GameManager();
 	Pane root = new Pane(); //root pane
 	Pane centerPiece = new Pane(); //the gameboard itself will be stored here
+	
+	private DefaultListModel<String> buffer = new DefaultListModel<String>();
 	static String config;
-	RemoteTask server_write = new RemoteTask(buffer, "write");
-	RemoteTask server_read = new RemoteTask(buffer, "read");
-	RemoteTask server_general = new RemoteTask(buffer, "");
+	
+	RemoteTask server_write;
+	RemoteTask server_read;
+	RemoteTask server_general;
+    ExecutorService pool = Executors.newFixedThreadPool(2);   
 	
 ////////////////////////////////////////////////////////////////////////////////////////////
 //GUI management and main
@@ -83,18 +88,20 @@ public class Test1 extends Application {
  ////////////////////////////////////////////////////////////////////////////////////////////
  //Different bits: the client and the server app are different here 
  	    
+ 		if (config == "server") {
+ 			server_write = new RemoteTask(buffer, "write", "server");
+ 			server_read = new RemoteTask(buffer, "read", "server");
+ 			server_general = new RemoteTask(buffer, "", "server");
+ 			server_initialize(80);
+ 		} else if (config == "client") {
+ 			server_write = new RemoteTask(buffer, "write", "client");
+ 			server_read = new RemoteTask(buffer, "read", "client");
+ 			server_general = new RemoteTask(buffer, "", "client");
+ 			server_initialize(80, InetAddress.getLocalHost().getHostName());
+ 		}
+ 		
  		//this buffer vector updates whenever 
  	    buffer.addListDataListener(new BufferListener(buffer));
- 	    if (config == "server") {
- 	    	//set remove as server
- 	    	server_general.run(80);
- 	    } else if (config == "client") {
- 	    	//set remote as client 
- 	    	server_general.run(80, InetAddress.getLocalHost().getHostName());
- 	    } else {
- 	    	//well now what's happening here...
- 	    }
- 	    //server/client stuff goes here 
 	}
 	
 	class BufferListener implements ListDataListener {
@@ -109,7 +116,7 @@ public class Test1 extends Application {
 		} 
 		public void intervalAdded(ListDataEvent e) {
 			//what happens when something is added to list?
-			//peel off first item, split it, 
+			//peel off first item, split it,  
 			System.out.println("added");
 			String[] args = target.get(0).split(" ");
 			
@@ -221,7 +228,7 @@ public class Test1 extends Application {
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////
-//Shared Other Methods	
+//Shared GUI/Server Methods	
 
 	void update_display(Pane root, GameManager gm) {
 		for (Pit change_pit : pits) {
@@ -237,6 +244,38 @@ public class Test1 extends Application {
 			while (working_store.size < gm.board[working_store.player * numPits])
 				root.getChildren().add(working_store.addPiece());
 		}
+	}
+	
+	//these are all... so terrible.
+	//they use the remoteTask.in field to pass input to the task, then run that task from the pool.
+	//I guess there are probably... worse ways to do this? probably?
+	
+	void write_to_remote(String _in) {
+		server_write.in = _in;
+		pool.execute(server_read);
+	}
+	
+	void read_from_remote() {
+		pool.execute(server_read);
+	}
+	
+	void server_initialize(int port) {
+		server_general.in_int = port;
+		server_general.in = "initialize"; 
+		server_general.in2 = "mancalaServer18242";
+		pool.execute(server_general);
+	}
+	
+	void server_initialize(int port, String hostname) {
+		server_general.in_int = port;
+		server_general.in = "initialize";
+		server_general.in2 = hostname;
+		pool.execute(server_general);
+	}
+	
+	void server_close() {
+		server_general.in = "close";
+		pool.execute(server_general);
 	}
 	
 }

@@ -18,76 +18,82 @@ public class RemoteTask implements Runnable {
 	private Socket remoteSocket;
 	private ServerSocket listenSocket;
 	public String client_or_server; //client or server
+	String in; //these two variables will be used to bastardize giving thread-pool input
+	String in2;  //believe me, I'm extremely ashamed.
+	int in_int;
 	String task = "initialize"; //
 	
-	RemoteTask(DefaultListModel<String> _buffer, String config) {
+	RemoteTask(DefaultListModel<String> _buffer, String config, String _client_or_server) {
 		//initialize as client
 		buffer = _buffer;
+		if (_client_or_server == "client" || _client_or_server == "server") {
+			client_or_server = _client_or_server;
+		} else {
+			System.out.println("client/server labelling failed.");
+		}
+		
 		if (config == "write" || config == "read") {
 			// read/write tasks
 			task = config;
 		} else {
 			//general purpose tasks 
 			task = null;
-		}
+		} 
 	}
 
 	@Override
 	public void run() {
-		//if read task, read. else, error
-		if (task == "read") {
+		if (task == "write") {
+			//write
+			remote_writer.write(in);
+		}
 		
+		if (task == "read") {
+			//if we're a read task, then read.
 			try {
 				buffer.addElement( remote_reader.readLine());
 			} catch (IOException e) {
 				//will an empty line cause this? who knows!
 				System.out.println("Reading from remote server failed.");
 			}
-		} else {
-			//that's not a read task. stop that. 
-		}
-	}
-	
-	public void run(int port) {
-		//initialize as server
-		client_or_server = "server";
-		try {
-			ServerSocket listenSocket = new ServerSocket(port); 
-			Socket clientSocket = listenSocket.accept();
-			remote_writer = new PrintWriter(clientSocket.getOutputStream());
-			remote_reader = new BufferedReader( new InputStreamReader(clientSocket.getInputStream()));
 			
-		}
-        catch (IOException e) { 
-			System.out.println("Something went wrong initializing server.");
-		}
-	}
-	
-	public void run(int port, String hostname) {
-		//initialize as client
-		client_or_server = "client";
-		try {
-			Socket remoteSocket = new Socket(hostname, port); 
-			remote_writer = new PrintWriter(remoteSocket.getOutputStream());
-			remote_reader = new BufferedReader( new InputStreamReader(remoteSocket.getInputStream()));
+		} else {
+			if (in == "close") {
+				//close the connection 
+				try {
+					remoteSocket.close(); //works whether client or server
+					listenSocket.close(); //if not a server, catches. easy-peasy.
+				} catch (IOException e) {
+					//Don't eeeeven worry about it !
+					//probably
+				}
+				
+			} else if (in == "mancalaServer18242") {
+				//initialize as server
+				try {
+					ServerSocket listenSocket = new ServerSocket(in_int); 
+					Socket clientSocket = listenSocket.accept();
+					remote_writer = new PrintWriter(clientSocket.getOutputStream());
+					remote_reader = new BufferedReader( new InputStreamReader(clientSocket.getInputStream()));
+					
+				}
+		        catch (IOException e) { 
+					System.out.println("Something went wrong initializing server.");
+				}
+				
+			} else {
+				//client
+				try {
+					Socket remoteSocket = new Socket(in2, in_int); 
+					remote_writer = new PrintWriter(remoteSocket.getOutputStream());
+					remote_reader = new BufferedReader( new InputStreamReader(remoteSocket.getInputStream()));
 
-		}
-		catch (IOException e) { 
-			System.out.println("Something wentwrong connecting to server.");
-		}
-	}
-	
-	public void run(String _in)  {
-		if (task == "write") {
-			remote_writer.write(_in);
-		} else if (_in == "close") {
-			try {
-				remoteSocket.close(); //works whether client or server
-				listenSocket.close(); //if not a server, catches. easy-peasy.
-			} catch (IOException e) {
-				//Don't eeeeven worry about it !
-				//probably
+				}
+				catch (IOException e) { 
+					System.out.println("Something went wrong connecting to server.");
+				}
 			}
 		}
+		
 	}
 }
