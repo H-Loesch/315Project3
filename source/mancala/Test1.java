@@ -58,7 +58,7 @@ public class Test1 extends Application {
 
 	public static void main(String[] args) {
 		try {
-			config = args[2]; // are we client or server?
+			config = args[0]; // are we client or server?
 		} catch (ArrayIndexOutOfBoundsException e) {
 			config = "server";
 		}
@@ -82,8 +82,8 @@ public class Test1 extends Application {
 
 		////////////////////////////////////////////////////////////////////////////////////////////
 		// Different bits: the client and the server app are different here
-
-		if (config == "server") {
+		
+		/*if (config == "server") {
 			server_write = new RemoteTask(buffer, "write", "server");
 			server_read = new RemoteTask(buffer, "read", "server");
 			server_general = new RemoteTask(buffer, "", "server");
@@ -93,7 +93,7 @@ public class Test1 extends Application {
 			server_read = new RemoteTask(buffer, "read", "client");
 			server_general = new RemoteTask(buffer, "", "client");
 			server_initialize(80, InetAddress.getLocalHost().getHostName());
-		}
+		}*/
 
 		// this buffer vector updates whenever
 		buffer.addListDataListener(new BufferListener(buffer));
@@ -194,7 +194,7 @@ public class Test1 extends Application {
 		/*
 		 * 7 8 9 10 11 12 1 2 3 4 5 6
 		 */
-		for (int j = 1; j < numPits; j++) {
+		for (int j = 1; j <= 2; j++) {
 			for (int i = 1; i <= numPits; i++) {
 				Pit working_pit;
 				if (j == 1) {
@@ -206,8 +206,8 @@ public class Test1 extends Application {
 					// closer player's pits; these are generated left-right
 					working_pit = new Pit(working.get(numPits - 1).getCenterX() + 130 * (i - 1), 400, numPits + 1 + i, 1,
 							gm, root, buffer);
-					root.getChildren().add(working_pit);
 					working_pit.setFill(Color.DARKGOLDENROD);
+					root.getChildren().add(working_pit);
 				}
 				working.add(working_pit);
 			}
@@ -248,7 +248,6 @@ public class Test1 extends Application {
 			while (working_store.size < gm.board[working_store.place])
 				root.getChildren().add(working_store.addPiece());
 		}
-		System.out.println("HOOOOOOOOOOOOOOOOONK");
 	}
 
 	// these are all... so terrible.
