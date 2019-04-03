@@ -38,9 +38,10 @@ public class Test1 extends Application {
 	// this buffer alerts an eventlistener every time it is changed.
 	public int player = 0; // is this still needed?
 	public int numPits = 4; // is this still needed?
+	public int numPieces = 6;
 	private static Random key = new Random();
 
-	private GameManager gm = new GameManager();
+	private GameManager gm = new GameManager(numPits, numPieces);
 	Pane root = new Pane(); // root pane
 	Pane centerPiece = new Pane(); // the gameboard itself will be stored here
 
@@ -66,22 +67,17 @@ public class Test1 extends Application {
 
 	@Override
 	public void start(Stage primary) throws Exception {
-		primary.setTitle("Mancala!");
+		primary.show(); // shows the scene in the newly-created application
 		root.setPrefSize(1080, 720);
 		root.setStyle("-fx-background-color: burlywood;");
 
 		pits = initializePits(root, gm);
 		stores = initializeStores(root, gm);
-		root.getChildren().addAll(pits);
-		for (Pit pit : pits) {
-			for (int i = 0; i < 4; i++) {
-				root.getChildren().add(pit.addPiece());
-			}
-		}
 		update_display(root, gm);
+		primary.setTitle("Mancala!");
+		primary.setScene(new Scene(root)); // sets stage to show the scene
 
 		// canvas.getChildren().addAll(placeInitialShapes(pits));
-		primary.setScene(new Scene(root)); // sets stage to show the scene
 		primary.show(); // shows the scene in the newly-created application
 
 		////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,10 +101,12 @@ public class Test1 extends Application {
 
 	class BufferListener implements ListDataListener {
 		DefaultListModel<String> target; // the buffer of strings that is our buffer
-
+		RemoteTask remote;
+		
 		BufferListener(DefaultListModel<String> _target) {
 			super();
 			target = _target;
+			
 		}
 
 		public void contentsChanged(ListDataEvent e) {
@@ -203,10 +201,12 @@ public class Test1 extends Application {
 					// further player's pits; these are generated right-left
 					working_pit = new Pit(numPits * 130 + 85 - (i - 1) * 130, 260, i, 0, gm, root, buffer);
 					working_pit.setFill(Color.SADDLEBROWN);
+					root.getChildren().add(working_pit);
 				} else {
 					// closer player's pits; these are generated left-right
-					working_pit = new Pit(working.get(numPits - 1).getCenterX() + 130 * (i - 1), 400, numPits + i, 1,
+					working_pit = new Pit(working.get(numPits - 1).getCenterX() + 130 * (i - 1), 400, numPits + 1 + i, 1,
 							gm, root, buffer);
+					root.getChildren().add(working_pit);
 					working_pit.setFill(Color.DARKGOLDENROD);
 				}
 				working.add(working_pit);
@@ -223,6 +223,7 @@ public class Test1 extends Application {
 		for (int i = 0; i < 2; i++) {
 			double horizontal_location = (130 * Math.pow(-1, i)) + pits.get((numPits - 1) * (i)).getCenterX();
 			Store working = new Store(horizontal_location, vertical_location, 70, 125, i, gm, root, buffer);
+			working.place = numPits * i + i * 1;
 			working.setFill(i == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
 			root.getChildren().add(working);
 			working_vec.add(working);
@@ -242,11 +243,12 @@ public class Test1 extends Application {
 		}
 
 		for (Store working_store : stores) {
-			while (working_store.size > gm.board[working_store.player * numPits])
+			while (working_store.size > gm.board[working_store.place])
 				root.getChildren().remove(working_store.removePiece());
-			while (working_store.size < gm.board[working_store.player * numPits])
+			while (working_store.size < gm.board[working_store.place])
 				root.getChildren().add(working_store.addPiece());
 		}
+		System.out.println("HOOOOOOOOOOOOOOOOONK");
 	}
 
 	// these are all... so terrible.
@@ -256,7 +258,7 @@ public class Test1 extends Application {
 
 	void write_to_remote(String _in) {
 		server_write.in = _in;
-		pool.execute(server_read);
+		pool.execute(server_write);
 	}
 
 	void read_from_remote() {

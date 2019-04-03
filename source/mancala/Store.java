@@ -21,6 +21,7 @@ import javafx.scene.text.Text;
 public class Store extends Ellipse{
 	public int player;
 	public int size;
+	public int place;
 	private GameManager gm;
 	private Pane root;
 	private DefaultListModel<String> buffer;
@@ -47,8 +48,9 @@ public class Store extends Ellipse{
 
         		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
         		size_label.setFill(Color.RED);
-        		Text number = new Text(Integer.toString(gm.board[player * (gm.numPits + 1)]));
-        		
+        		//Text number = new Text(Integer.toString(gm.board[player * (gm.numPits + 1)]));
+        		Text number = new Text(Integer.toString(player));
+
         		text_box.getChildren().addAll(size_label, number);
         		size_label.setId("temp_box");
         		root.getChildren().add(text_box);

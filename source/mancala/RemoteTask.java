@@ -41,6 +41,9 @@ public class RemoteTask implements Runnable {
 		} 
 	}
 
+	//run(): now we run our threads in various manners
+	//based on qualities of these threads, this function does different things! 
+	//For now, we have a read, write, and general thread. 
 	@Override
 	public void run() {
 		if (task == "write") {
