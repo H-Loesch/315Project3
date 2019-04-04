@@ -1,6 +1,7 @@
 package mancala;
 
 import java.util.Vector;
+import java.util.Random;
 import java.util.Scanner;
 
 public class GameManager {
@@ -12,6 +13,28 @@ public class GameManager {
 	public int numPieces = 4;
 	private int initialSetup;
 
+	
+	void randomPieces() {  //used to create a random distribution of pieces, uses numPieces for average number
+		
+		Random rnd = new Random();
+		int[] distro = new int[numPits];
+		
+		//insures each pit has at least 1 piece
+		for(int k = 0; k < numPits; k++) {
+			distro[k]=1;
+		}
+		for(int i = 0; i < numPits*(numPieces-1); i++) {
+			distro[Math.abs(rnd.nextInt()%numPits)]++;
+		}
+		for(int j = 0; j < numPits; j++) {
+			board[j+1]=distro[j];
+			board[j+2+numPits]=distro[j];
+		}
+		
+		
+	}
+	
+	
 	GameManager() { //initializes board
 		
 		
@@ -22,17 +45,21 @@ public class GameManager {
 		}
 	}
 	
-	//TODO alternate constructor here with non-standard pit #, seed #, seed distribution (other stuff?)
-
+	//input of negative value trigger random distribution
+	//numPieces it set to absolute value of parameter
+	//this value is used as the average value for the pits
 	GameManager(int newPits, int newPieces) { //initializes board with values other that 6 pits and 4 pieces
 		
 		numPits = newPits;
-		numPieces = newPieces;
+		numPieces = Math.abs(newPieces);
 		
 		for(int i = 1; i < (2*numPits)+2; i++) { //skip player's kala at 0
 			if(i == numPits+1)
 				i++;			//skip AI's kala
 			board[i] = numPieces;
+		}
+		if(numPieces<0) {
+			randomPieces();
 		}
 	}
 	
