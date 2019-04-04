@@ -1,6 +1,6 @@
 package mancala;
  import java.util.ArrayList;
- public class Tree {
+/* public class Tree {
 	Node root;
 	ArrayList<Node> children = new ArrayList<Node>();
 	ArrayList<Integer> moves = new ArrayList<Integer>();
@@ -48,4 +48,4 @@ package mancala;
 		depth--;
 		return child;
 	}
-}
+}*/

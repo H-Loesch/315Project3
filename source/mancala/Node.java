@@ -3,12 +3,14 @@ import java.util.*;
 
 public class Node {
 	GameManager root;
+	int player; //which player we are. 
 	ArrayList<GameManager> children;
 	ArrayList<Integer> moves = new ArrayList<Integer>();
 	
 	Node(GameManager game){
 		root = game;
 		children = new ArrayList<GameManager>();
+		player = game.player;
 	}
 	void createChildren() {
 		validMoves();
@@ -35,7 +37,7 @@ public class Node {
 
 	GameManager nextGame(int move) {
 		GameManager child = root;
-		child.move(move);
+		child.move(move, player);
 		return child;
 	}
 }
