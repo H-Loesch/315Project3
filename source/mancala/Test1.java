@@ -30,24 +30,28 @@ import javafx.stage.Stage;
 //TODO add pits and stores to a pane, then put that pane centered in the root window. 
 //TODO make GUI-based input check if a move is legal before sending it to the buffer.
 
+enum Config {
+	CLIENT, SERVER, LOCAL
+}
+
 public class Test1 extends Application {
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Defining variables for our overall application. god there's so many. 
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
-	// this buffer alerts an eventlistener every time it is changed.
 	public int player = 0; // is this still needed?
 	public int numPits = 4; // is this still needed?
 	public int numPieces = 6;
 	private static Random key = new Random();
+	Config config; //are we client or server?
 
 	private GameManager gm = new GameManager(numPits, numPieces);
 	Pane root = new Pane(); // root pane
 	Pane centerPiece = new Pane(); // the gameboard itself will be stored here
 
 	private DefaultListModel<String> buffer = new DefaultListModel<String>();
-	static String config;
-
+	
+	//remote threads
 	RemoteTask server_write;
 	RemoteTask server_read;
 	RemoteTask server_general;
@@ -57,11 +61,6 @@ public class Test1 extends Application {
 //GUI management and main
 
 	public static void main(String[] args) {
-		try {
-			config = args[0]; // are we client or server?
-		} catch (ArrayIndexOutOfBoundsException e) {
-			config = "server";
-		}
 		launch(args);
 	}
 
@@ -79,26 +78,22 @@ public class Test1 extends Application {
 
 		// canvas.getChildren().addAll(placeInitialShapes(pits));
 		primary.show(); // shows the scene in the newly-created application
-
-		////////////////////////////////////////////////////////////////////////////////////////////
-		// Different bits: the client and the server app are different here
 		
-		/*if (config == "server") {
-			server_write = new RemoteTask(buffer, "write", "server");
-			server_read = new RemoteTask(buffer, "read", "server");
-			server_general = new RemoteTask(buffer, "", "server");
-			server_initialize(80);
-		} else if (config == "client") {
-			server_write = new RemoteTask(buffer, "write", "client");
-			server_read = new RemoteTask(buffer, "read", "client");
-			server_general = new RemoteTask(buffer, "", "client");
-			server_initialize(80, InetAddress.getLocalHost().getHostName());
-		}*/
-
-		// this buffer vector updates whenever
+		//placeholder input
+	    Scanner uinput = new Scanner(System.in);  // Create a Scanner object
+		System.out.println("hey idiot do you want to be a server? if yes type 1. client, type 2. to die, type a will saying you wanna leave me everything.");
+		int config = Integer.parseInt(uinput.nextLine());
+		if (config == 1) {
+			initializeAsServer(80);
+		} else if (config == 2) {
+			initializeAsClient(80, InetAddress.getLocalHost().getHostName());
+		}
+		// Add a listener to our buffer so it does stuff.		
 		buffer.addListDataListener(new BufferListener(buffer));
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////
+	//Buffer listener
 	class BufferListener implements ListDataListener {
 		DefaultListModel<String> target; // the buffer of strings that is our buffer
 		RemoteTask remote;
@@ -119,7 +114,8 @@ public class Test1 extends Application {
 			// peel off first item, split it,
 			System.out.println("added");
 			String[] args = target.get(0).split(" ");
-
+			
+			/*
 			if (config == "server") {
 				// we're a server
 				// acknowledgements handling
@@ -145,6 +141,7 @@ public class Test1 extends Application {
 					// if first argument is a number, then this is a move; pass to game manager
 				}
 			} else {
+				writeToRemote(args[0]);
 				// we're a client
 				if (args[0] == "WELCOME") {
 
@@ -165,10 +162,10 @@ public class Test1 extends Application {
 					// moves and configuration
 				} else {
 					String response = gm.handle_input(args);
-					write_to_remote(response);
+					writeToRemote(response);
 					// if first argument is a number, then this is a move; pass to game manager
 				}
-			}
+			}*/
 
 			update_display(root, gm);
 			buffer.remove(0);
@@ -187,7 +184,7 @@ public class Test1 extends Application {
 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-//Shared init Methods	
+//init Methods	
 	private Vector<Pit> initializePits(Pane root, GameManager gm) {
 		// initialize location, all that for the pits.
 		// don't yet initialize the stones that will go in them. Or maybe do, idk.
@@ -233,7 +230,7 @@ public class Test1 extends Application {
 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-//Shared GUI/Server Methods	
+//GUI/Server Methods	
 
 	void update_display(Pane root, GameManager gm) {
 		for (Pit change_pit : pits) {
@@ -256,30 +253,37 @@ public class Test1 extends Application {
 	// task from the pool.
 	// I guess there are probably... worse ways to do this? probably?
 
-	void write_to_remote(String _in) {
+	void writeToRemote(String _in) {
 		server_write.in = _in;
 		pool.execute(server_write);
 	}
 
-	void read_from_remote() {
+	void readFromRemote() {
 		pool.execute(server_read);
 	}
 
-	void server_initialize(int port) {
-		server_general.in_int = port;
-		server_general.in = "initialize";
-		server_general.in2 = "mancalaServer18242";
+	void initializeAsServer(int port) {
+		server_write = new RemoteTask(buffer, Task.WRITE, Config.SERVER);
+		server_read = new RemoteTask(buffer, Task.READ, Config.SERVER);
+		server_general = new RemoteTask(buffer, Task.GENERAL, Config.SERVER);
+		
+		server_general.in = Integer.toString(port);
+		server_general.in2 = null;
 		pool.execute(server_general);
 	}
-
-	void server_initialize(int port, String hostname) {
-		server_general.in_int = port;
-		server_general.in = "initialize";
+	
+	void initializeAsClient(int port, String hostname) {
+		//hostname =  InetAddress.getLocalHost().getHostName(); // set hostname as self
+		server_write = new RemoteTask(buffer, Task.WRITE, Config.CLIENT);
+		server_read = new RemoteTask(buffer, Task.READ, Config.CLIENT);
+		server_general = new RemoteTask(buffer, Task.GENERAL, Config.CLIENT);
+		
+		server_general.in = Integer.toString(port);
 		server_general.in2 = hostname;
 		pool.execute(server_general);
 	}
 
-	void server_close() {
+	void closeRemoteConnection() {
 		server_general.in = "close";
 		pool.execute(server_general);
 	}
