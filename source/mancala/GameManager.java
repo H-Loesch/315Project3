@@ -7,18 +7,18 @@ import java.util.Scanner;
 public class GameManager {
 	public int[] board = new int[14];
 	public int player = 0;
-	public int playerWon = -1;
+	public boolean winner = false;
 	Scanner scanner = new Scanner(System.in);
 	public int numPits = 6;
 	public int numPieces = 4;
 	private int initialSetup;
 
-	
+
 	void randomPieces() {  //used to create a random distribution of pieces, uses numPieces for average number
-		
+
 		Random rnd = new Random();
 		int[] distro = new int[numPits];
-		
+
 		//insures each pit has at least 1 piece
 		for(int k = 0; k < numPits; k++) {
 			distro[k]=1;
@@ -30,29 +30,29 @@ public class GameManager {
 			board[j+1]=distro[j];
 			board[j+2+numPits]=distro[j];
 		}
-		
-		
+
+
 	}
-	
-	
+
+
 	GameManager() { //initializes board
-		
-		
+
+
 		for(int i = 1; i < (2*numPits)+2; i++) { //skip player's kala at 0
 			if(i == numPits+1)
 				i++;			//skip AI's kala
 			board[i] = numPieces;
 		}
 	}
-	
+
 	//input of negative value trigger random distribution
 	//numPieces it set to absolute value of parameter
 	//this value is used as the average value for the pits
 	GameManager(int newPits, int newPieces) { //initializes board with values other that 6 pits and 4 pieces
-		
+
 		numPits = newPits;
 		numPieces = Math.abs(newPieces);
-		
+
 		for(int i = 1; i < (2*numPits)+2; i++) { //skip player's kala at 0
 			if(i == numPits+1)
 				i++;			//skip AI's kala
@@ -62,8 +62,8 @@ public class GameManager {
 			randomPieces();
 		}
 	}
-	
-	
+
+
 	void run() {
 		boolean legal = false;
 		int selection = 0;
@@ -120,7 +120,7 @@ public class GameManager {
 		if (!legalMove(selection, player)) {
 			return 2;
 		}
-		
+
 		int grabbed = board[selection];
 		board[selection] = 0;		//remove marbles from pit
 
@@ -220,7 +220,7 @@ public class GameManager {
 		return computerHasStones;
 	}
 
-	int winner() { //0 player 1 AI
+	boolean winner() { //0 player 1 AI
 		System.out.println("Player 1's score: " + board[0]);
 		System.out.println("AI's score: " + board[numPits+1]);
 		if(board[0] > board[numPits+1])		//player wins
@@ -246,11 +246,11 @@ public class GameManager {
 		}
 		System.out.println();
 	}
-	
+
 	//illegal moves should still go here, and then return smth that stops the play loop
-	
+
 	//this returns a string: "OK" if move is okay, go ahead and grab the next input
-	//"END" for when game is over due to regular play 
+	//"END" for when game is over due to regular play
 	//"ILLEGAL" if, well. if illegal lol. I'm a lil too tired to be planning out structural stuff I think.
 	String handle_input(String[] input_arr) {
 		//probably something that involves checking for input

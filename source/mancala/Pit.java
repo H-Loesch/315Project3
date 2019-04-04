@@ -1,7 +1,7 @@
 package mancala;
 
 import java.util.Random;
-//extend from Node, pass 
+//extend from Node, pass
 import java.util.Vector;
 
 import javax.swing.DefaultListModel;
@@ -18,27 +18,27 @@ import javafx.scene.text.Text;
 //the six pits on each side of the game board (total 12)
 public class Pit extends javafx.scene.shape.Circle{
 //is an extension of a circle, such that eventhandlers for this can use qualities of the pit itself
-	
+
 	private Vector<Piece> contents;
-	Pane root; 
+	Pane root;
 	DefaultListModel<String> buffer;
 	GameManager gm;
 	public int size = 0;
-	public int place; //numerical place on the board 
+	public int place; //numerical place on the board
 	public int player; //which player does this pit belong to?
 	static Random key = new Random();
 	//maybe some variable that notes if this pit has changed, and thus needs to be re-rendered?
 
-	//construct empty pit 
+	//construct empty pit
 	public Pit(double _x_loc, double _y_loc, int _place, int _player, GameManager _gm, Pane _container, DefaultListModel<String> _buffer) {
-		super(_x_loc, _y_loc, 55); //call constructor for circle 
+		super(_x_loc, _y_loc, 55); //call constructor for circle
 		player = _player;
 		place = _place;
 		root = _container;
 		gm = _gm;
 		buffer = _buffer;
 		contents = new Vector<Piece>();
-		
+
 		//Event handlers for the mouse hovering over, leaving the area of, and clicking on the pits
 		//These could... probably be moved to the constructor for pits, maybe?
         this.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
@@ -54,13 +54,13 @@ public class Pit extends javafx.scene.shape.Circle{
         		//Text number = new Text(Integer.toString(gm.board[place]));
         		Text number = new Text(Integer.toString(place));
         		number.setId("text_box_number");
-        		
+
         		text_box.getChildren().addAll(size_label, number);
         		size_label.setId("temp");
         		root.getChildren().add(text_box);
         	}
         });
-        
+
         this.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
         	//when mouse exits pit, delete the text box created upon entry
         	@Override public void handle(MouseEvent event) {
@@ -69,19 +69,19 @@ public class Pit extends javafx.scene.shape.Circle{
         		//destroy the object created when the mouse entered this pit
         	}
         });
-        
+
         this.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-        	@Override public void handle(MouseEvent event) { 
+        	@Override public void handle(MouseEvent event) {
         		//handle the pit being clicked on. Validate move, do a move... whatever, that's not my problem right now.
-        		//check if move is legal here, or something? 
+        		//check if move is legal here, or something?
 
         		//add that move to the buffer
         		buffer.addElement( Integer.toString(place));
         	}
         });
 	}
-	
-	//Add a piece with random color to this pit; return that piece 
+
+	//Add a piece with random color to this pit; return that piece
 	public Piece addPiece() {
 		double x_loc = this.getCenterX() + key.nextInt(61) - 30;
 		double y_loc = this.getCenterY() + key.nextInt(61) - 30;
@@ -89,18 +89,18 @@ public class Pit extends javafx.scene.shape.Circle{
 		Piece new_piece = new Piece(x_loc, y_loc);
 		contents.add(new_piece);
 		size += 1;
-		
+
 		//set location of piece such that it is within this pit on the GUI.
-		
+
 		return new_piece;
 	};
-	
-	//remove a piece from this pit! whoa! 
+
+	//remove a piece from this pit! whoa!
 	public Piece removePiece() {
 		//generate number 0 - size(), remove piece at that index. you know, that way it doesn't remove the most recently-added one every time!
 		Piece temp = contents.remove(size - 1);
 		size -= 1;
 		return temp;
 	}
-	
+
 }
