@@ -120,7 +120,7 @@ public class Test1 extends Application {
 			System.out.println("added");
 			String[] args = target.get(0).split(" ");
 
-			if (true) {
+			if (config == "server") {
 				// we're a server
 				// acknowledgements handling
 				if (args[0] == "WELCOME") {
@@ -165,6 +165,7 @@ public class Test1 extends Application {
 					// moves and configuration
 				} else {
 					String response = gm.handle_input(args);
+					write_to_remote(response);
 					// if first argument is a number, then this is a move; pass to game manager
 				}
 			}
