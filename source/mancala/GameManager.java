@@ -8,8 +8,8 @@ public class GameManager {
 	public int player = 0;
 	public int playerWon = -1;
 	Scanner scanner = new Scanner(System.in);
-	private int numPits = 6;
-	private int numPieces = 4;
+	public int numPits = 6;
+	public int numPieces = 4;
 	private int initialSetup;
 
 	GameManager() { //initializes board

@@ -41,6 +41,9 @@ public class RemoteTask implements Runnable {
 		} 
 	}
 
+	//run(): now we run our threads in various manners
+	//based on qualities of these threads, this function does different things! 
+	//For now, we have a read, write, and general thread. 
 	@Override
 	public void run() {
 		if (task == "write") {
@@ -71,11 +74,11 @@ public class RemoteTask implements Runnable {
 			} else if (in == "mancalaServer18242") {
 				//initialize as server
 				try {
-					ServerSocket listenSocket = new ServerSocket(in_int); 
-					Socket clientSocket = listenSocket.accept();
-					remote_writer = new PrintWriter(clientSocket.getOutputStream());
-					remote_reader = new BufferedReader( new InputStreamReader(clientSocket.getInputStream()));
-					
+					listenSocket = new ServerSocket(in_int); 
+					remoteSocket = listenSocket.accept();
+					remote_writer = new PrintWriter(remoteSocket.getOutputStream());
+					remote_reader = new BufferedReader( new InputStreamReader(remoteSocket.getInputStream()));
+					System.out.println("Server Connected.");
 				}
 		        catch (IOException e) { 
 					System.out.println("Something went wrong initializing server.");
@@ -84,7 +87,7 @@ public class RemoteTask implements Runnable {
 			} else {
 				//client
 				try {
-					Socket remoteSocket = new Socket(in2, in_int); 
+					remoteSocket = new Socket(in2, in_int); 
 					remote_writer = new PrintWriter(remoteSocket.getOutputStream());
 					remote_reader = new BufferedReader( new InputStreamReader(remoteSocket.getInputStream()));
 
