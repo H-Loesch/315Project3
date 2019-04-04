@@ -63,8 +63,20 @@ public class GameManager {
 		}
 	}
 
+	void pieRule() {
+		
+		for(int i = 0; i <= numPits; i++) {
+			int temp = board[i];
+			board[i] = board[i+numPits+1];
+			board[i+numPits+1] = temp;
+		}
 
+	}
+	
+	
 	void run() {
+		
+		
 		boolean legal = false;
 		int selection = 0;
 		print();
