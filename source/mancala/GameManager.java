@@ -220,7 +220,7 @@ public class GameManager {
 		return computerHasStones;
 	}
 
-	boolean winner() { //0 player 1 AI
+	int winner() { //0 player 1 AI
 		System.out.println("Player 1's score: " + board[0]);
 		System.out.println("AI's score: " + board[numPits+1]);
 		if(board[0] > board[numPits+1])		//player wins
