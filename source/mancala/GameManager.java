@@ -7,7 +7,7 @@ import java.util.Scanner;
 public class GameManager {
 	public int[] board = new int[14];
 	public int player = 0;
-	public boolean winner = false;
+	public int winner = 0;
 	Scanner scanner = new Scanner(System.in);
 	public int numPits = 6;
 	public int numPieces = 4;
@@ -63,8 +63,20 @@ public class GameManager {
 		}
 	}
 
+	void pieRule() {
+		
+		for(int i = 0; i <= numPits; i++) {
+			int temp = board[i];
+			board[i] = board[i+numPits+1];
+			board[i+numPits+1] = temp;
+		}
 
+	}
+	
+	
 	void run() {
+		
+		
 		boolean legal = false;
 		int selection = 0;
 		print();
@@ -81,7 +93,7 @@ public class GameManager {
 
 		//check game over state
 		if(!playerHasStones() || !computerHasStones()) {
-			winner();								//game over calculate winner
+			findWinner();								//game over calculate winner
 
 
 
@@ -220,15 +232,16 @@ public class GameManager {
 		return computerHasStones;
 	}
 
-	int winner() { //0 player 1 AI
+	int findWinner() { //0 player 1 AI
+
 		System.out.println("Player 1's score: " + board[0]);
 		System.out.println("AI's score: " + board[numPits+1]);
 		if(board[0] > board[numPits+1])		//player wins
-			return 0;
-		else if(board[numPits+1] > board[0])	//AI wins
 			return 1;
-		else							//Tie
+		else if(board[numPits+1] > board[0])	//AI wins
 			return 2;
+		else							//Tie
+			return 0;
 	}
 
 	void print() {
