@@ -51,8 +51,8 @@ public class Pit extends javafx.scene.shape.Circle{
 
         		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
         		size_label.setFill(Color.RED);
-        		//Text number = new Text(Integer.toString(gm.board[place]));
-        		Text number = new Text(Integer.toString(place));
+        		Text number = new Text(Integer.toString(gm.board[place]));
+        		//Text number = new Text(Integer.toString(place));
         		number.setId("text_box_number");
 
         		text_box.getChildren().addAll(size_label, number);

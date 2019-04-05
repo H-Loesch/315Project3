@@ -34,17 +34,23 @@ enum Config {
 	CLIENT, SERVER, LOCAL
 }
 
+enum Source {
+	HUMAN, SERVER, CLIENT, AI
+}
+
 public class Test1 extends Application {
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Defining variables for our overall application. god there's so many. 
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
-	public int player = 0; // is this still needed?
+	public int player = 0; // whose turn is it right now?
 	public int numPits = 4; // is this still needed?
 	public int numPieces = 6;
 	private static Random key = new Random();
 	Config config; //are we client or server?
-
+	Source playerOne;
+	Source playerTwo; //players can be either from a remote, or from a local human or AI. 
+	
 	private GameManager gm = new GameManager(numPits, numPieces);
 	Pane root = new Pane(); // root pane
 	Pane centerPiece = new Pane(); // the gameboard itself will be stored here
@@ -52,10 +58,8 @@ public class Test1 extends Application {
 	private DefaultListModel<String> buffer = new DefaultListModel<String>();
 	
 	//remote threads
-	RemoteTask server_write;
-	RemoteTask server_read;
-	RemoteTask server_general;
-	ExecutorService pool = Executors.newFixedThreadPool(2);
+	Remote remote;
+	ExecutorService pool = Executors.newFixedThreadPool(1);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //GUI management and main
@@ -82,26 +86,30 @@ public class Test1 extends Application {
 		//placeholder input
 	    Scanner uinput = new Scanner(System.in);  // Create a Scanner object
 		System.out.println("hey idiot do you want to be a server? if yes type 1. client, type 2. to die, type a will saying you wanna leave me everything.");
-		int config = Integer.parseInt(uinput.nextLine());
-		if (config == 1) {
-			initializeAsServer(80);
-		} else if (config == 2) {
-			initializeAsClient(80, InetAddress.getLocalHost().getHostName());
+		int warble = Integer.parseInt(uinput.nextLine());
+		if (warble == 1) {
+			remote = new Remote(buffer, 80);
+			config = Config.SERVER;
+		} else if (warble == 2) {
+			remote = new Remote(buffer, 80, InetAddress.getLocalHost().getHostName());
+			config = Config.CLIENT;
 		}
+		
+		//run our remote connection thread
+		pool.execute(remote);
 		// Add a listener to our buffer so it does stuff.		
-		buffer.addListDataListener(new BufferListener(buffer));
+		buffer.addListDataListener(new BufferListener(buffer, remote));
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////
 	//Buffer listener
 	class BufferListener implements ListDataListener {
 		DefaultListModel<String> target; // the buffer of strings that is our buffer
-		RemoteTask remote;
-		
-		BufferListener(DefaultListModel<String> _target) {
+		Remote remote; 
+		BufferListener(DefaultListModel<String> _target, Remote _remote) {
 			super();
 			target = _target;
-			
+			remote = _remote;
 		}
 
 		public void contentsChanged(ListDataEvent e) {
@@ -115,57 +123,34 @@ public class Test1 extends Application {
 			System.out.println("added");
 			String[] args = target.get(0).split(" ");
 			
-			/*
-			if (config == "server") {
-				// we're a server
-				// acknowledgements handling
-				if (args[0] == "WELCOME") {
+			// we're a client
+			if (args[0] == "WELCOME") {
 
-				} else if (args[0] == "READY") {
+			} else if (args[0] == "READY") {
 
-				} else if (args[0] == "OK") {
+			} else if (args[0] == "OK") {
 
-				} else if (args[0] == "ILLEGAL") {
+			} else if (args[0] == "ILLEGAL") {
 
-				} else if (args[0] == "TIME") {
+			} else if (args[0] == "TIME") {
 
-				} else if (args[0] == "LOSER") {
+			} else if (args[0] == "LOSER") {
 
-				} else if (args[0] == "WINNER") {
+			} else if (args[0] == "WINNER") {
 
-				} else if (args[0] == "TIE") {
+			} else if (args[0] == "TIE") {
 
-					// moves and configuration
-				} else {
-					String response = gm.handle_input(args);
-					// if first argument is a number, then this is a move; pass to game manager
-				}
+				// moves and configuration
 			} else {
-				writeToRemote(args[0]);
-				// we're a client
-				if (args[0] == "WELCOME") {
-
-				} else if (args[0] == "READY") {
-
-				} else if (args[0] == "OK") {
-
-				} else if (args[0] == "ILLEGAL") {
-
-				} else if (args[0] == "TIME") {
-
-				} else if (args[0] == "LOSER") {
-
-				} else if (args[0] == "WINNER") {
-
-				} else if (args[0] == "TIE") {
-
-					// moves and configuration
-				} else {
-					String response = gm.handle_input(args);
-					writeToRemote(response);
-					// if first argument is a number, then this is a move; pass to game manager
-				}
-			}*/
+				if (config == Config.CLIENT) {
+					System.out.println("Sending to remote");
+					remote.remote_writer.println(args);}
+				else {
+					System.out.println("WHOA WE GOT A THING");
+					String response = gm.handle_input(args);}
+				// if first argument is a number, then this is a move; pass to game manager
+			}
+		
 
 			update_display(root, gm);
 			buffer.remove(0);
@@ -246,46 +231,6 @@ public class Test1 extends Application {
 			while (working_store.size < gm.board[working_store.place])
 				root.getChildren().add(working_store.addPiece());
 		}
-	}
-
-	// these are all... so terrible.
-	// they use the remoteTask.in field to pass input to the task, then run that
-	// task from the pool.
-	// I guess there are probably... worse ways to do this? probably?
-
-	void writeToRemote(String _in) {
-		server_write.in = _in;
-		pool.execute(server_write);
-	}
-
-	void readFromRemote() {
-		pool.execute(server_read);
-	}
-
-	void initializeAsServer(int port) {
-		server_write = new RemoteTask(buffer, Task.WRITE, Config.SERVER);
-		server_read = new RemoteTask(buffer, Task.READ, Config.SERVER);
-		server_general = new RemoteTask(buffer, Task.GENERAL, Config.SERVER);
-		
-		server_general.in = Integer.toString(port);
-		server_general.in2 = null;
-		pool.execute(server_general);
-	}
-	
-	void initializeAsClient(int port, String hostname) {
-		//hostname =  InetAddress.getLocalHost().getHostName(); // set hostname as self
-		server_write = new RemoteTask(buffer, Task.WRITE, Config.CLIENT);
-		server_read = new RemoteTask(buffer, Task.READ, Config.CLIENT);
-		server_general = new RemoteTask(buffer, Task.GENERAL, Config.CLIENT);
-		
-		server_general.in = Integer.toString(port);
-		server_general.in2 = hostname;
-		pool.execute(server_general);
-	}
-
-	void closeRemoteConnection() {
-		server_general.in = "close";
-		pool.execute(server_general);
 	}
 
 }
