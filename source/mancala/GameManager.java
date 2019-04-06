@@ -6,12 +6,15 @@ import java.util.Scanner;
 
 public class GameManager {
 	public int[] board = new int[14];
-	public int player = 0;
+	public int currentPlayer = 0; // whose turn is it right now?
+	public int localPlayer = 0; //which player is local? (it can also be both of them so whatever)
 	public int winner = 0;
 	Scanner scanner = new Scanner(System.in);
-	public int numPits = 6;
-	public int numPieces = 4;
-	private int initialSetup;
+	public int numPits = 6; //number of pits on each side of the board
+	public int numPieces = 4; //average number of pieces / pit
+	public long timeLimit = 5000; //time in milliseconds for each player to make a move 
+	public int moveNumber; //home many moves have been made this game.
+	Source playerInputs[] = {Source.HUMAN, Source.HUMAN}; //Will contain our tw o players' sources. Defaults to 2-player local
 
 
 	void randomPieces() {  //used to create a random distribution of pieces, uses numPieces for average number
@@ -80,16 +83,16 @@ public class GameManager {
 		boolean legal = false;
 		int selection = 0;
 		print();
-		System.out.println("Player's " + player + " turn");
+		System.out.println("Player's " + currentPlayer + " turn");
 
 
 		while(!legal) { //continues till legal move made
 			System.out.println("\ninput move: ");
 			selection = Integer.parseInt(scanner.next());   //get new input for move
-			legal = legalMove(selection, player);
+			legal = legalMove(selection, currentPlayer);
 		}
 		//legal move made
-		player = move(selection, player);
+		currentPlayer = move(selection, currentPlayer);
 
 		//check game over state
 		if(!playerHasStones() || !computerHasStones()) {
@@ -197,6 +200,9 @@ public class GameManager {
 				}
 			}
 		}
+		if(!playerHasStones() || !computerHasStones()) {
+			findWinner();								//game over calculate winner
+		}
 		return 1 - player;
 	}
 
@@ -258,45 +264,6 @@ public class GameManager {
 			System.out.print(board[i] + " | ");
 		}
 		System.out.println();
-	}
-
-	//illegal moves should still go here, and then return smth that stops the play loop
-
-	//this returns a string: "OK" if move is okay, go ahead and grab the next input
-	//"END" for when game is over due to regular play
-	//"ILLEGAL" if, well. if illegal lol. I'm a lil too tired to be planning out structural stuff I think.
-	String handle_input(String[] input_arr) {
-		//probably something that involves checking for input
-		if (input_arr[0] == "INFO") {
-			return "placeholder ;)";
-
-			//do game setup stuff
-			//store the initial setup stuff in the game manager itself, then use that in main to figure everything else out
-			//this will also necessitate moving gm initialization out of its constructor
-		} else if (input_arr[0] == "P"){
-			// pie rule
-			return "placeholder ;)";
-
-			//....handle the pie rule? idk bud
-		} else if (input_arr[0].matches("^[0-9]*$")) {
-			System.out.println("Player's " + player + " turn");
-			//if first char is a number (regular ol' move)
-			for (int i = 0; i < input_arr.length; i++) {
-				//move will have to be adjusted for this to work: make the error code actually work
-				int result = this.move(Integer.parseInt(input_arr[i]),  player); //do that move until there are no moves remaining
-				if (result == 0 || result == 1) {
-					//return a player, move successful; this should also make subsequent moves from the same input return illegal
-					player = result;
-					return "OK";
-				} else {
-					//returned 2, move failed
-					return "ILLEGAL";
-				}
-			}
-		return "placeholder ;)";
-		} else {
-			return "placeholder ;)";
-		}
 	}
 
 }

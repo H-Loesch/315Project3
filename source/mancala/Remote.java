@@ -54,7 +54,6 @@ public class Remote implements Runnable {
 				remoteSocket = listenSocket.accept();
 				remote_writer = new PrintWriter(remoteSocket.getOutputStream(), true);
 				remote_reader = new BufferedReader( new InputStreamReader(remoteSocket.getInputStream()));
-				remote_writer.println("hey bud what's up?");
 				System.out.println("Client Connected.");
 			} else {
 				remote_writer = new PrintWriter(remoteSocket.getOutputStream(), true);
