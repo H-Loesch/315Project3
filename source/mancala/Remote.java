@@ -68,7 +68,6 @@ public class Remote implements Runnable {
 		try {
 			while ((inputLine = remote_reader.readLine()) != null) {
 				//read repeatedly
-				System.out.println("WHOA INPUT RECEIVED FROM REMOTE	");
 				if (inputLine.equals("close")) {
 					break;
 				}

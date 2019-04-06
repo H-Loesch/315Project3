@@ -23,18 +23,17 @@ public class Store extends Ellipse{
 	public int size;
 	public int place;
 	private GameManager gm;
-	private Pane root;
+	private Pane container;
 	private DefaultListModel<String> buffer;
 	private static Random key = new Random();
 	private Vector<Piece> contents;
-	Pane container;
 
 	Store(double _x_loc, double _y_loc, double _x_size, double _y_size, int _player, GameManager _gm, Pane _root, DefaultListModel<String> _buffer) {
 		super(_x_loc, _y_loc, _x_size, _y_size);
 		player = _player;
 		contents = new Vector<Piece>();
 		gm = _gm;
-		root = _root;
+		container = _root;
 		buffer = _buffer;
 
         addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
@@ -53,7 +52,7 @@ public class Store extends Ellipse{
 
         		text_box.getChildren().addAll(size_label, number);
         		size_label.setId("temp_box");
-        		root.getChildren().add(text_box);
+        		container.getChildren().add(text_box);
         		//something something create a text box above the pit when mouse is over it
         		//set the ID to something specific so that the mouse_exited item can remove it.
         	}
@@ -62,8 +61,8 @@ public class Store extends Ellipse{
         addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
         	//when mouse exits pit, delete the text box created upon entry
         	@Override public void handle(MouseEvent event) {
-        		javafx.scene.Node size_label = root.lookup("#temp_box");
-        		root.getChildren().remove(size_label);
+        		javafx.scene.Node size_label = container.lookup("#temp_box");
+        		container.getChildren().remove(size_label);
         		//destroy the object created when the mouse entered this pit
         	}
         });

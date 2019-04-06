@@ -20,7 +20,7 @@ public class Pit extends javafx.scene.shape.Circle{
 //is an extension of a circle, such that eventhandlers for this can use qualities of the pit itself
 
 	private Vector<Piece> contents;
-	Pane root;
+	Pane container;
 	DefaultListModel<String> buffer;
 	GameManager gm;
 	public int size = 0;
@@ -34,11 +34,11 @@ public class Pit extends javafx.scene.shape.Circle{
 		super(_x_loc, _y_loc, 55); //call constructor for circle
 		player = _player;
 		place = _place;
-		root = _container;
+		container = _container;
 		gm = _gm;
 		buffer = _buffer;
 		contents = new Vector<Piece>();
-/*
+
 		//Event handlers for the mouse hovering over, leaving the area of, and clicking on the pits
 		//These could... probably be moved to the constructor for pits, maybe?
         this.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
@@ -52,22 +52,22 @@ public class Pit extends javafx.scene.shape.Circle{
         		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
         		size_label.setFill(Color.RED);
 
-        		Text number = new Text(Integer.toString(gm.board[size]));
+        		Text number = new Text(Integer.toString(gm.board[place]));
 
         		//Text number = new Text(Integer.toString(place));
         		number.setId("text_box_number");
 
         		text_box.getChildren().addAll(size_label, number);
         		size_label.setId("temp");
-        		root.getChildren().add(text_box);
+        		container.getChildren().add(text_box);
         	}
         });
-*/
+
         this.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
         	//when mouse exits pit, delete the text box created upon entry
         	@Override public void handle(MouseEvent event) {
-        		javafx.scene.Node size_label = root.lookup("#temp_box");
-        		root.getChildren().remove(size_label);
+        		javafx.scene.Node size_label = container.lookup("#temp_box");
+        		container.getChildren().remove(size_label);
         		//destroy the object created when the mouse entered this pit
         	}
         });

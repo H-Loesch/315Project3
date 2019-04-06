@@ -15,6 +15,7 @@ import javax.swing.event.ListDataListener;
 import javafx.application.Application;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
@@ -36,6 +37,8 @@ import javafx.event.ActionEvent;
 //TODO Add displays: current player, each player's score; probably other things too 
 //TODO check on the pie rule function. maybe look into... making it cooler.
 	//Probably smart to write the rest of the program in such a way that it can be done by just switching a few vars in the gm or smth.
+//TODO figure out what happens when the buffer receives a new item while already processing one 
+	//use mutexes or something to make it not be a problem?
 enum Config {
 	CLIENT, SERVER, LOCAL
 }
@@ -49,18 +52,22 @@ public class Test1 extends Application {
 //Defining variables for our overall application. god there's so many. 
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
+
 	public int numPits = 4; // is this still needed?
 	public int numPieces = 6;
 	private static Random key = new Random();
 	Config config; //are we client or server?
 	
+
 	private GameManager gm = new GameManager(numPits, numPieces);
 	Pane root = new Pane(); // root pane
 	Pane centerPiece = new Pane(); // the gameboard itself will be stored here
 
 	private DefaultListModel<String> buffer = new DefaultListModel<String>();
 	
-	//remote threads
+
+	static Integer configType = 0;	//remote threads
+
 	Remote remote;
 	ExecutorService pool = Executors.newFixedThreadPool(1);
 
@@ -72,6 +79,7 @@ public class Test1 extends Application {
 	}
 	
 	@Override
+
 	  public void start(Stage primaryStage){
 	    
 		// Set the stage title
@@ -99,6 +107,7 @@ public class Test1 extends Application {
 	    // Register the event Handler
 	    //scrabbleButton.setOnAction(new ScrabbleButtonHandler());
 	    pvpButton.setOnAction(new pvpButtonHandler());
+
 		
 	    
 	    //put the label and button in a VBox with 10 pixels of spacing.
@@ -149,15 +158,27 @@ public class Test1 extends Application {
 		if (warble == 1) {
 			remote = new Remote(buffer, 80);
 			config = Config.SERVER;
+			gm.playerInputs[1] = Source.REMOTECLIENT;
 		} else if (warble == 2) {
 			remote = new Remote(buffer, 80, InetAddress.getLocalHost().getHostName());
 			config = Config.CLIENT;
+
+			gm.playerInputs[1] = Source.REMOTESERVER;
+
 		}
 		
 		//run our remote connection thread
 		pool.execute(remote);
 		// Add a listener to our buffer so it does stuff.		
 		buffer.addListDataListener(new BufferListener(buffer, remote));
+		
+		/*String inputLine;
+		while (warble == 1 && (inputLine = uinput.nextLine()) != null) {
+			//read repeatedly
+			remote.remote_writer.println(inputLine); //legit I built this to run off the buffer so just. write to that
+		
+		}*/
+		
 	}
 	*/
 	////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,7 +201,6 @@ public class Test1 extends Application {
 		public void intervalAdded(ListDataEvent e) {
 			// what happens when something is added to list?
 			// peel off first item, split it
-			System.out.println("added");
 			Vector<String> args = new Vector<String>(Arrays.asList(target.get(0).split(" ")));
 			
 			Boolean isLocal = args.get(0).equals("LOCAL");
@@ -189,11 +209,12 @@ public class Test1 extends Application {
 			}
 
 			handleInput(args, isLocal);
+			//update_display(root, gm);
+			target.remove(0);
 			//I mean I can't imagine why we'd be getting local acknowledgements... do we need these?
 			
 			//this is bugged bc java doesn't like it when we modify the GUI outside of the GUI thread
 			//update_display(root, gm);
-			buffer.remove(0);
 			// handling of some acknowledgments should probably go here
 			// else, send them off to the game manager! woo!
 
@@ -217,6 +238,7 @@ public class Test1 extends Application {
 		/*
 		 * 7 8 9 10 11 12 1 2 3 4 5 6
 		 */
+		
 		for (int j = 1; j <= 2; j++) {
 			for (int i = 1; i <= numPits; i++) {
 				Pit working_pit;
@@ -232,27 +254,6 @@ public class Test1 extends Application {
 					working_pit.setFill(Color.DARKGOLDENROD);
 					root.getChildren().add(working_pit);
 				}
-				
-				working_pit.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
-		        	@Override public void handle(MouseEvent event) {
-		        		//create new stack pane for the box, since these automatically center things
-		        		StackPane text_box = new StackPane();
-		        		text_box.setLayoutX(working_pit.getCenterX() - 22.5);
-		        		text_box.setLayoutY(working_pit.getCenterY() - 90);
-		        		text_box.setId("temp_box");
-
-		        		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
-		        		size_label.setFill(Color.RED);
-		        		Text number = new Text(Integer.toString(gm.board[working_pit.size]));
-		        		//Text number = new Text(Integer.toString(place));
-		        		number.setId("text_box_number");
-
-		        		text_box.getChildren().addAll(size_label, number);
-		        		size_label.setId("temp");
-		        		root.getChildren().add(text_box);
-		        		update_display(root, gm);
-		        	}
-		        });
 				
 				working.add(working_pit);
 			}
@@ -272,6 +273,14 @@ public class Test1 extends Application {
 			working.setFill(i == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
 			root.getChildren().add(working);
 			working_vec.add(working);
+			
+			//add a mouse handler to update the display ; this is a horrendous workaround I know. 
+			working.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+	        	@Override public void handle(MouseEvent event) {
+	        		System.out.println("click");
+	        		update_display(root, gm);
+	        	}
+	        });
 		}
 		return working_vec;
 	}
@@ -299,43 +308,81 @@ public class Test1 extends Application {
 ////////////////////////////////////////////////////////////////////////////////////
 //Buffer input Handling
 	private String handleInput(Vector<String> args, Boolean isLocal) {
-		System.out.println("handling inputs");
-		if (args.get(0) == "WELCOME") {
-			
-		} else if (args.get(0) == "READY" || args.get(0).equals("OK")) {
-			//this handling of things might actually be applicable to "OK" as well... 
-			//might also be possible to replace Config enum with the source one? hm....
-			gm.currentPlayer = 1 - gm.currentPlayer;
-			if (gm.playerInputs[gm.currentPlayer] == Source.AI) {
-				//Tell the AI to start movin!!!!!!!!!!!!!!!!!!!!!!!!!
-			} else if (gm.playerInputs[gm.currentPlayer] == Source.REMOTECLIENT) {
-				//Start keeping time TODO
-			} else if (gm.playerInputs[gm.currentPlayer] == Source.REMOTESERVER) {
-				//wait for the remote server to make a move 
-			}
-			
-		}  else if (args.get(0) == "ILLEGAL") {
-			if (config == Config.CLIENT) {
-				//server ran out of time. Toss this in the bin, we're about to win.
-			}
-			
-		} else if (args.get(0) == "TIME") {
-			if (config == Config.CLIENT) {
-				//server ran out of time. Toss this in the bin, we're about to win.
-			}
-			
-		} else if (args.get(0) == "LOSER") {
-			//end game, display loser text
-			
-		} else if (args.get(0) == "WINNER") {
-			//end game, display winner text
-			
-			
-		} else if (args.get(0) == "TIE") {
-			//end game, display tie text
+		System.out.println(args);
 		
+		if (args.get(0).equals("WELCOME")){
+			//yeah
+		} else if (args.get(0).equals("READY") || args.get(0).equals("OK")) {
+			//Received "READY" ack; it is now either the server's or client's turn to move.
+			gm.acknowledge = true;
+			gm.start_time = System.currentTimeMillis();
+			switch(gm.playerInputs[gm.currentPlayer]) {
+				case HUMAN : 
+					//local player: have fun, buddy :)
+					//prolly do some like. display stuff. 
+					break;
+				case REMOTESERVER :
+					//wait for server's move 
+					break;
+				case AI :
+					//notify AI to start making a move 
+					break;
+				case REMOTECLIENT : 
+					//start... timing them? I don't think we really need anything here
+					break;
+					
+			} 
 			
-			// moves and configuration
+		//I THINK OK and READY can be wrapped into the same, since whose turn it is is handled elsehwere 
+/*		} else if (args.get(0) == "OK") { 
+			//Received "OK" ack; it is now the other's turn. 
+*/			
+		} else if (args.get(0).equals("ILLEGAL")) {
+			
+			if (isLocal) {
+				//we've written ourselves an illegal signal. neat. 
+				// ....handle this, idk. 
+			} else if (gm.acknowledge) {
+				//the server has messed up. hee hee hoo ho
+			} else {
+				//if last move isn't acknowledged, that means we messed up. oh no! we lose
+				//prepare to lose? (do nothing...?) 
+			}
+			
+		} else if (args.get(0).equals("TIME")) {
+			if (gm.acknowledge) {
+				//If last move was acknowledged, that means server took too long
+				//we win? carry out server's last move but then we win 
+			} else {
+				//if last move wasn't acknowledged, that means we took too long. oh no
+				
+			}
+			
+			
+		} else if (args.get(0).equals("LOSER")) {
+			if (isLocal) {
+				System.out.println("YOU WIN");
+				// we win! (cuz we're sending the remote a loser message 
+			} else {
+				System.out.println("YOU LOSE");
+				//we lose :c
+			}
+			
+		} else if (args.get(0).equals("WINNER")) {
+			//end game, display winner text
+			if (isLocal) {
+				//we lose :c
+				System.out.println("YOU LOSE");
+			} else {
+				//we win!
+				System.out.println("YOU WIN");
+			}
+			
+		} else if (args.get(0).equals("TIE")) {
+			//end game, display tie text
+			//game ended in tie 
+			System.out.println("YOU DON'T WIN OR LOSE I GUESS");
+			
 		} else if (args.get(0).equals("INFO")) {
 			
 			//THIS initializes our gameboard. None of the board should be initialized until this is ran.
@@ -361,51 +408,70 @@ public class Test1 extends Application {
 			//if local, write the same args to the remote
 			//if remote, configure game 
 			
-		} else if (args.get(0) == "P"){
+		} else if (args.get(0).equals("P")) {
 			// pie rule
-			gm.moveNumber += 1;
-			if (gm.moveNumber == 2) {
+			if (gm.moveNumber == 1) {
+				//if this is second move in game, do pie rule
+				gm.moveNumber += 1;
 				//do a pie rule!
 			} else {
 				//return illegal
 			}
 			
 			//if this was locally-generated, write it to the remote.
-			if (isLocal) {
+			if (isLocal && (gm.playerInputs[gm.currentPlayer] == Source.REMOTESERVER || gm.playerInputs[1 - gm.currentPlayer]== Source.REMOTECLIENT )) {
 				remote.remote_writer.println("P");
+				gm.acknowledge = false;
 			}		
-			//....handle the pie rule? idk bud
 			
 		} else if (args.get(0).matches("^[0-9]*$")) {
+			//if our first character is a number, then we do a regular ol' move.
 			String moves = "";
-			gm.moveNumber += 1;
-			//if first char is a number (regular ol' move)
 			for (int i = 0; i < args.size(); i++) {
 				//move will have to be adjusted for this to work: make the error code actually work
-				System.out.println(args.get(0));
 				try {
 					int result = gm.move(Integer.parseInt(args.get(i)),  gm.currentPlayer); //do that move until there are no moves remaining
 					if (result == 0 || result == 1) {
 						//return a player, move successful; this should also make subsequent moves from the same input return illegal
 						gm.currentPlayer = result;
 						moves = moves + " " + Integer.parseInt(args.get(i));
-					} else {
-						//returned 2, move failed
-						//return "ILLEGAL";
+						
+						//need somethign to handle *who* wins in these situations
+					} else if (result == 2) {
+						//send ourselves an illegal signal.
+						return "LOCAL ILLEGAL";
+					
+					} else if (result == 3 ) {
+						//player 0 has won 
+						return "LOCAL WINNER";
+					} else if (result == 4 ) {
+						return "LOCAL LOSER";
+					} else if (result == 5 ) {
+						buffer.addElement("LOCAL TIE");
 					}
 				} catch (NumberFormatException e) {
 					//this ain't a number........ stop that....
 				}
 			}
 			
-			if (isLocal) {
+			moves = moves.substring(1); //remove starting space
+			//if we locally-generated this move, write it to the remote. 
+			//if (isLocal && (gm.playerInputs[gm.currentPlayer] == Source.REMOTESERVER || gm.playerInputs[1 - gm.currentPlayer]== Source.REMOTECLIENT )) {
+			if (isLocal) {	//if the other player is remote, write to remote.
 				remote.remote_writer.println(moves);
+				gm.acknowledge = false;
 			}		
+			
+			//manually call the mouse click event on one of the pits
+			//this is the worst possible way to trigger an event in another thread, sh.
+			//Event.fireEvent(stores.get(0), new MouseEvent(MouseEvent.MOUSE_CLICKED,
+			//		   stores.get(0).getCenterX(), stores.get(0).getCenterY(), stores.get(0).getCenterX(), stores.get(0).getCenterY(),
+			//		   MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
 		} else {
 			//return "Failed to handle input ;;;;";
 		}
+		return ""; //if nothing else, return empty string.
 		//return "This should never show up";
-	return "honk";	
 	}
 }
 
@@ -443,10 +509,12 @@ class testHandle implements EventHandler<ActionEvent>{
 	
 	@Override
 	public void handle(ActionEvent event) {
+
 		
 		
 		System.out.println("You did it XD XD XD");
 		
+
 	}
 	
 

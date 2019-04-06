@@ -18,8 +18,11 @@ public class GameManager {
 	public long timeLimit = 5000; //time in milliseconds for each player to make a move 
 	public int moveNumber; //home many moves have been made this game.
 	Source playerInputs[] = {Source.HUMAN, Source.HUMAN}; //Will contain our tw o players' sources. Defaults to 2-player local
-
-
+	
+	public long start_time; //time acknowledgement is received
+	public long end_time;  //time move is received 
+	
+	Boolean acknowledge = false; //have we received an OK for the latest move
 	void randomPieces() {  //used to create a random distribution of pieces, uses numPieces for average number
 
 		Random rnd = new Random();
@@ -162,11 +165,13 @@ public class GameManager {
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
 			}
+			
 			System.out.println("Move ended on: " + move);
 			if(move == 0) { //landed in kala, go again
 				System.out.println("Go again!");
 				return 0;
 			}
+			
 			else {
 				if(move < numPits+1) {  //on your side
 					if(board[move] == 1) { //empty pit
@@ -209,7 +214,7 @@ public class GameManager {
 			}
 		}
 		if(!playerHasStones() || !computerHasStones()) {
-			findWinner();								//game over calculate winner
+			return findWinner();								//game over calculate winner
 		}
 		return 1 - player;
 	}
@@ -251,11 +256,11 @@ public class GameManager {
 		System.out.println("Player 1's score: " + board[0]);
 		System.out.println("AI's score: " + board[numPits+1]);
 		if(board[0] > board[numPits+1])		//player wins
-			return 1;
+			return 3;
 		else if(board[numPits+1] > board[0])	//AI wins
-			return 2;
+			return 4;
 		else							//Tie
-			return 0;
+			return 5;
 	}
 
 	void print() {
