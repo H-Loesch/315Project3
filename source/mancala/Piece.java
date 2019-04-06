@@ -25,11 +25,11 @@ public class Piece extends javafx.scene.shape.Circle {
 			this.setFill(Color.HOTPINK);
 			break;
 		case(1):
-			this.setFill(Color.WHITE);
+			this.setFill(Color.CHARTREUSE);
 			break;
 		case(2):
 			this.setFill(Color.DEEPSKYBLUE);
 			break;
 		}
-	}
+	} 
 }

@@ -5,7 +5,7 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class GameManager {
-	public int[] board = new int[14];
+	public int[] board;
 	public int player = 0;
 	public int winner = 0;
 	Scanner scanner = new Scanner(System.in);
@@ -30,14 +30,14 @@ public class GameManager {
 			board[j+1]=distro[j];
 			board[j+2+numPits]=distro[j];
 		}
-
-
+		
 	}
 
 
 	GameManager() { //initializes board
 
-
+		 board = new int[(2*numPits)+2];
+				 
 		for(int i = 1; i < (2*numPits)+2; i++) { //skip player's kala at 0
 			if(i == numPits+1)
 				i++;			//skip AI's kala
@@ -49,16 +49,18 @@ public class GameManager {
 	//numPieces it set to absolute value of parameter
 	//this value is used as the average value for the pits
 	GameManager(int newPits, int newPieces) { //initializes board with values other that 6 pits and 4 pieces
-
+		
+		
 		numPits = newPits;
 		numPieces = Math.abs(newPieces);
+		board = new int[(2*numPits)+2];
 
 		for(int i = 1; i < (2*numPits)+2; i++) { //skip player's kala at 0
 			if(i == numPits+1)
 				i++;			//skip AI's kala
 			board[i] = numPieces;
 		}
-		if(numPieces<0) {
+		if(newPieces<0) {
 			randomPieces();
 		}
 	}
@@ -105,12 +107,15 @@ public class GameManager {
 	boolean legalMove(int selection, int player) {
 		boolean legalMove = true;
 
-		if(board[selection] == 0 || selection > ((2*numPits)+2)-1) { //illegal move for any player
+		if(board[selection] == 0 || selection > ((2*numPits)+2)-1) { //illegal move for any player (empty pit || out of bounds)
 			legalMove = false;
 		}
 
+		if(selection==0 || selection == numPits+1) { //illegal move (stores)
+			legalMove = false;
+		}
 		if(player == 0) {
-			if(selection == 0 || selection <= numPits+1) { //illegal move for player
+			if(selection <= numPits+1) { //illegal move for player
 				legalMove = false;
 			}
 		}

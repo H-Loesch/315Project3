@@ -1,6 +1,8 @@
 package mancala;
 
 import java.net.InetAddress;
+
+
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Vector;
@@ -23,6 +25,11 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import javafx.geometry.Pos;
+import javafx.scene.control.TextField;
+import javafx.event.ActionEvent;
+import javafx.scene.control.Button;
+
 //TODO make the GUI check each cycle *not* be terrible
 //TODO see about deleting objects instead of just removing them from the root pane's list (memory leak?)
 //TODO improve placement for pieces inside stores
@@ -34,23 +41,34 @@ enum Config {
 	CLIENT, SERVER, LOCAL
 }
 
+
+
 public class Test1 extends Application {
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Defining variables for our overall application. god there's so many. 
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
 	public int player = 0; // is this still needed?
-	public int numPits = 4; // is this still needed?
-	public int numPieces = 6;
+	static int numPits = 6; // is this still needed? YES? need a variable to pass into game manager
+	static int numPieces = 4;
+	//public int configType = 0;
 	private static Random key = new Random();
+	private Color player1Color = Color.SADDLEBROWN;
+	private Color player2Color = Color.DARKGOLDENROD;
 	Config config; //are we client or server?
 
+	static TextField setPits;
+	static TextField setPieces;
+	
+	
 	private GameManager gm = new GameManager(numPits, numPieces);
 	Pane root = new Pane(); // root pane
 	Pane centerPiece = new Pane(); // the gameboard itself will be stored here
 
 	private DefaultListModel<String> buffer = new DefaultListModel<String>();
 	
+	
+	static int configType = 0;
 	//remote threads
 	RemoteTask server_write;
 	RemoteTask server_read;
@@ -67,25 +85,60 @@ public class Test1 extends Application {
 	@Override
 	public void start(Stage primary) throws Exception {
 		primary.show(); // shows the scene in the newly-created application
-		root.setPrefSize(1080, 720);
+		//root.setPrefSize(135*(numPits+2), 720);
+		root.setPrefSize(720, 720);
 		root.setStyle("-fx-background-color: burlywood;");
-
-		pits = initializePits(root, gm);
-		stores = initializeStores(root, gm);
-		update_display(root, gm);
 		primary.setTitle("Mancala!");
-		primary.setScene(new Scene(root)); // sets stage to show the scene
-
+		
+		setPits = new TextField();
+		setPits.setPromptText("How Many Pits?");
+		setPits.relocate((720/2)-75,50);
+		root.getChildren().add(setPits);
+		
+		setPieces = new TextField();
+		setPieces.setPromptText("How Many Pieces?");
+		setPieces.relocate((720/2)-75,125);
+		root.getChildren().add(setPieces);
+		
+		
+		
+		Button play = new Button("Play");
+		root.getChildren().add(play);
+		
+		
+		//primary.show();
+		//update_display(root,gm);
+		
+		
+		primary.setScene(new Scene(root));
+		
+		
+		while(configType==0) {
+			int x = 3;
+			
+		}
+		
+		
+		//root.getChildren().remove(setPits);
+		
+		
+		//pits = initializePits(root, gm);
+		//stores = initializeStores(root, gm);
+		//update_display(root, gm);
+		
+		//primary.setScene(new Scene(root)); // sets stage to show the scene
+		
 		// canvas.getChildren().addAll(placeInitialShapes(pits));
 		primary.show(); // shows the scene in the newly-created application
 		
 		//placeholder input
 	    Scanner uinput = new Scanner(System.in);  // Create a Scanner object
 		System.out.println("hey idiot do you want to be a server? if yes type 1. client, type 2. to die, type a will saying you wanna leave me everything.");
-		int config = Integer.parseInt(uinput.nextLine());
-		if (config == 1) {
+		//int config = Integer.parseInt(uinput.nextLine());
+		//int config = 2;
+		if (configType == 1) {
 			initializeAsServer(80);
-		} else if (config == 2) {
+		} else if (configType == 2) {
 			initializeAsClient(80, InetAddress.getLocalHost().getHostName());
 		}
 		// Add a listener to our buffer so it does stuff.		
@@ -198,13 +251,13 @@ public class Test1 extends Application {
 				if (j == 1) {
 					// further player's pits; these are generated right-left
 					working_pit = new Pit(numPits * 130 + 85 - (i - 1) * 130, 260, i, 0, gm, root, buffer);
-					working_pit.setFill(Color.SADDLEBROWN);
+					working_pit.setFill(player1Color);
 					root.getChildren().add(working_pit);
 				} else {
 					// closer player's pits; these are generated left-right
 					working_pit = new Pit(working.get(numPits - 1).getCenterX() + 130 * (i - 1), 400, numPits + 1 + i, 1,
 							gm, root, buffer);
-					working_pit.setFill(Color.DARKGOLDENROD);
+					working_pit.setFill(player2Color);
 					root.getChildren().add(working_pit);
 				}
 				working.add(working_pit);
@@ -222,7 +275,7 @@ public class Test1 extends Application {
 			double horizontal_location = (130 * Math.pow(-1, i)) + pits.get((numPits - 1) * (i)).getCenterX();
 			Store working = new Store(horizontal_location, vertical_location, 70, 125, i, gm, root, buffer);
 			working.place = numPits * i + i * 1;
-			working.setFill(i == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
+			working.setFill(i == 1 ? player1Color : player2Color);
 			root.getChildren().add(working);
 			working_vec.add(working);
 		}
@@ -287,5 +340,20 @@ public class Test1 extends Application {
 		server_general.in = "close";
 		pool.execute(server_general);
 	}
+	
 
+}
+
+
+class playButtonHandler implements EventHandler<ActionEvent>{
+	
+	@Override
+	public void handle(ActionEvent event) {
+		Test1.configType = 2;
+		Test1.numPits = Integer.parseInt(Test1.setPits.getText());
+		
+	}
+	
+	
+	
 }
