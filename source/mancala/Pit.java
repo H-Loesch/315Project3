@@ -38,7 +38,7 @@ public class Pit extends javafx.scene.shape.Circle{
 		gm = _gm;
 		buffer = _buffer;
 		contents = new Vector<Piece>();
-
+/*
 		//Event handlers for the mouse hovering over, leaving the area of, and clicking on the pits
 		//These could... probably be moved to the constructor for pits, maybe?
         this.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
@@ -51,7 +51,9 @@ public class Pit extends javafx.scene.shape.Circle{
 
         		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
         		size_label.setFill(Color.RED);
-        		Text number = new Text(Integer.toString(gm.board[place]));
+
+        		Text number = new Text(Integer.toString(gm.board[size]));
+
         		//Text number = new Text(Integer.toString(place));
         		number.setId("text_box_number");
 
@@ -60,7 +62,7 @@ public class Pit extends javafx.scene.shape.Circle{
         		root.getChildren().add(text_box);
         	}
         });
-
+*/
         this.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
         	//when mouse exits pit, delete the text box created upon entry
         	@Override public void handle(MouseEvent event) {
@@ -75,8 +77,12 @@ public class Pit extends javafx.scene.shape.Circle{
         		//handle the pit being clicked on. Validate move, do a move... whatever, that's not my problem right now.
         		//check if move is legal here, or something?
 
-        		//add that move to the buffer
-        		buffer.addElement( Integer.toString(place));
+        		//add that move to the buffer if the move is legal
+        		if (gm.legalMove(place, gm.currentPlayer) || gm.playerInputs[gm.currentPlayer] == Source.HUMAN) {
+        			//only allow pushing this to buffer if it's legal and it's actually your turn.
+        			//also, let's preface it with LOCAL so that our input handler will know it's not from a remote source 
+        			buffer.addElement( "LOCAL " + Integer.toString(place));
+        		}
         	}
         });
 	}

@@ -2,7 +2,7 @@ package mancala;
 
 import java.net.InetAddress;
 
-
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Vector;
@@ -32,34 +32,39 @@ import javafx.scene.control.Button;
 
 //TODO make the GUI check each cycle *not* be terrible
 //TODO see about deleting objects instead of just removing them from the root pane's list (memory leak?)
-//TODO improve placement for pieces inside stores
 //TODO Add displays: current player, each player's score; probably other things too 
-//TODO add pits and stores to a pane, then put that pane centered in the root window. 
-//TODO make GUI-based input check if a move is legal before sending it to the buffer.
-
+//TODO check on the pie rule function. maybe look into... making it cooler.
+	//Probably smart to write the rest of the program in such a way that it can be done by just switching a few vars in the gm or smth.
 enum Config {
 	CLIENT, SERVER, LOCAL
 }
 
 
+enum Source {
+	HUMAN, REMOTESERVER, REMOTECLIENT, AI
+}
 
 public class Test1 extends Application {
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Defining variables for our overall application. god there's so many. 
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
+
 	public int player = 0; // is this still needed?
 	static int numPits = 6; // is this still needed? YES? need a variable to pass into game manager
 	static int numPieces = 4;
 	//public int configType = 0;
+
 	private static Random key = new Random();
 	private Color player1Color = Color.SADDLEBROWN;
 	private Color player2Color = Color.DARKGOLDENROD;
 	Config config; //are we client or server?
 
+
 	static TextField setPits;
 	static TextField setPieces;
 	
+
 	
 	private GameManager gm = new GameManager(numPits, numPieces);
 	Pane root = new Pane(); // root pane
@@ -70,10 +75,8 @@ public class Test1 extends Application {
 	
 	static int configType = 0;
 	//remote threads
-	RemoteTask server_write;
-	RemoteTask server_read;
-	RemoteTask server_general;
-	ExecutorService pool = Executors.newFixedThreadPool(2);
+	Remote remote;
+	ExecutorService pool = Executors.newFixedThreadPool(1);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //GUI management and main
@@ -134,27 +137,33 @@ public class Test1 extends Application {
 		//placeholder input
 	    Scanner uinput = new Scanner(System.in);  // Create a Scanner object
 		System.out.println("hey idiot do you want to be a server? if yes type 1. client, type 2. to die, type a will saying you wanna leave me everything.");
-		//int config = Integer.parseInt(uinput.nextLine());
-		//int config = 2;
-		if (configType == 1) {
-			initializeAsServer(80);
-		} else if (configType == 2) {
-			initializeAsClient(80, InetAddress.getLocalHost().getHostName());
+
+		int warble = Integer.parseInt(uinput.nextLine());
+		if (warble == 1) {
+			remote = new Remote(buffer, 80);
+			config = Config.SERVER;
+		} else if (warble == 2) {
+			remote = new Remote(buffer, 80, InetAddress.getLocalHost().getHostName());
+			config = Config.CLIENT;
+
 		}
+		
+		//run our remote connection thread
+		pool.execute(remote);
 		// Add a listener to our buffer so it does stuff.		
-		buffer.addListDataListener(new BufferListener(buffer));
+		buffer.addListDataListener(new BufferListener(buffer, remote));
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////
 	//Buffer listener
 	class BufferListener implements ListDataListener {
 		DefaultListModel<String> target; // the buffer of strings that is our buffer
-		RemoteTask remote;
-		
-		BufferListener(DefaultListModel<String> _target) {
+		Remote remote; 
+		Boolean isLocal = false;
+		BufferListener(DefaultListModel<String> _target, Remote _remote) {
 			super();
 			target = _target;
-			
+			remote = _remote;
 		}
 
 		public void contentsChanged(ListDataEvent e) {
@@ -164,63 +173,20 @@ public class Test1 extends Application {
 
 		public void intervalAdded(ListDataEvent e) {
 			// what happens when something is added to list?
-			// peel off first item, split it,
+			// peel off first item, split it
 			System.out.println("added");
-			String[] args = target.get(0).split(" ");
+			Vector<String> args = new Vector<String>(Arrays.asList(target.get(0).split(" ")));
 			
-			/*
-			if (config == "server") {
-				// we're a server
-				// acknowledgements handling
-				if (args[0] == "WELCOME") {
+			Boolean isLocal = args.get(0).equals("LOCAL");
+			if (isLocal) {
+				args.remove(0);
+			}
 
-				} else if (args[0] == "READY") {
-
-				} else if (args[0] == "OK") {
-
-				} else if (args[0] == "ILLEGAL") {
-
-				} else if (args[0] == "TIME") {
-
-				} else if (args[0] == "LOSER") {
-
-				} else if (args[0] == "WINNER") {
-
-				} else if (args[0] == "TIE") {
-
-					// moves and configuration
-				} else {
-					String response = gm.handle_input(args);
-					// if first argument is a number, then this is a move; pass to game manager
-				}
-			} else {
-				writeToRemote(args[0]);
-				// we're a client
-				if (args[0] == "WELCOME") {
-
-				} else if (args[0] == "READY") {
-
-				} else if (args[0] == "OK") {
-
-				} else if (args[0] == "ILLEGAL") {
-
-				} else if (args[0] == "TIME") {
-
-				} else if (args[0] == "LOSER") {
-
-				} else if (args[0] == "WINNER") {
-
-				} else if (args[0] == "TIE") {
-
-					// moves and configuration
-				} else {
-					String response = gm.handle_input(args);
-					writeToRemote(response);
-					// if first argument is a number, then this is a move; pass to game manager
-				}
-			}*/
-
-			update_display(root, gm);
+			handleInput(args, isLocal);
+			//I mean I can't imagine why we'd be getting local acknowledgements... do we need these?
+			
+			//this is bugged bc java doesn't like it when we modify the GUI outside of the GUI thread
+			//update_display(root, gm);
 			buffer.remove(0);
 			// handling of some acknowledgments should probably go here
 			// else, send them off to the game manager! woo!
@@ -232,7 +198,7 @@ public class Test1 extends Application {
 
 		public void intervalRemoved(ListDataEvent e) {
 			// what happens when something is removed from list?
-			System.out.println("removed");
+			//nothing lol
 		}
 	}
 
@@ -260,6 +226,28 @@ public class Test1 extends Application {
 					working_pit.setFill(player2Color);
 					root.getChildren().add(working_pit);
 				}
+				
+				working_pit.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
+		        	@Override public void handle(MouseEvent event) {
+		        		//create new stack pane for the box, since these automatically center things
+		        		StackPane text_box = new StackPane();
+		        		text_box.setLayoutX(working_pit.getCenterX() - 22.5);
+		        		text_box.setLayoutY(working_pit.getCenterY() - 90);
+		        		text_box.setId("temp_box");
+
+		        		Rectangle size_label = new javafx.scene.shape.Rectangle(22.5, 17.5, 45, 35);
+		        		size_label.setFill(Color.RED);
+		        		Text number = new Text(Integer.toString(gm.board[working_pit.size]));
+		        		//Text number = new Text(Integer.toString(place));
+		        		number.setId("text_box_number");
+
+		        		text_box.getChildren().addAll(size_label, number);
+		        		size_label.setId("temp");
+		        		root.getChildren().add(text_box);
+		        		update_display(root, gm);
+		        	}
+		        });
+				
 				working.add(working_pit);
 			}
 
@@ -301,47 +289,119 @@ public class Test1 extends Application {
 		}
 	}
 
-	// these are all... so terrible.
-	// they use the remoteTask.in field to pass input to the task, then run that
-	// task from the pool.
-	// I guess there are probably... worse ways to do this? probably?
 
-	void writeToRemote(String _in) {
-		server_write.in = _in;
-		pool.execute(server_write);
-	}
-
-	void readFromRemote() {
-		pool.execute(server_read);
-	}
-
-	void initializeAsServer(int port) {
-		server_write = new RemoteTask(buffer, Task.WRITE, Config.SERVER);
-		server_read = new RemoteTask(buffer, Task.READ, Config.SERVER);
-		server_general = new RemoteTask(buffer, Task.GENERAL, Config.SERVER);
+////////////////////////////////////////////////////////////////////////////////////
+//Buffer input Handling
+	private String handleInput(Vector<String> args, Boolean isLocal) {
+		System.out.println("handling inputs");
+		if (args.get(0) == "WELCOME") {
+			
+		} else if (args.get(0) == "READY" || args.get(0).equals("OK")) {
+			//this handling of things might actually be applicable to "OK" as well... 
+			//might also be possible to replace Config enum with the source one? hm....
+			gm.currentPlayer = 1 - gm.currentPlayer;
+			if (gm.playerInputs[gm.currentPlayer] == Source.AI) {
+				//Tell the AI to start movin!!!!!!!!!!!!!!!!!!!!!!!!!
+			} else if (gm.playerInputs[gm.currentPlayer] == Source.REMOTECLIENT) {
+				//Start keeping time TODO
+			} else if (gm.playerInputs[gm.currentPlayer] == Source.REMOTESERVER) {
+				//wait for the remote server to make a move 
+			}
+			
+		}  else if (args.get(0) == "ILLEGAL") {
+			if (config == Config.CLIENT) {
+				//server ran out of time. Toss this in the bin, we're about to win.
+			}
+			
+		} else if (args.get(0) == "TIME") {
+			if (config == Config.CLIENT) {
+				//server ran out of time. Toss this in the bin, we're about to win.
+			}
+			
+		} else if (args.get(0) == "LOSER") {
+			//end game, display loser text
+			
+		} else if (args.get(0) == "WINNER") {
+			//end game, display winner text
+			
+			
+		} else if (args.get(0) == "TIE") {
+			//end game, display tie text
 		
-		server_general.in = Integer.toString(port);
-		server_general.in2 = null;
-		pool.execute(server_general);
+			
+			// moves and configuration
+		} else if (args.get(0).equals("INFO")) {
+			
+			//THIS initializes our gameboard. None of the board should be initialized until this is ran.
+			numPits = Integer.parseInt(args.get(1));
+			numPieces = Integer.parseInt(args.get(2));
+			gm.timeLimit = Long.parseLong(args.get(3)); 
+			if (args.get(4).equals("F")) {
+				//client goes first
+			} else if (args.get(4).equals("S")) {
+				//server goes first
+			}
+			
+			//probably call our initialization of the board in this block here. 
+			//Call a diff one depending on if 5 is S or R 
+			if (args.get(5).equals("S")) {
+				//god is good. Normal configuration.
+			} else if (args.get(5).equals("R")) {
+				//god is not good. Random configuration. Initialize with the desired layout of pits.
+				
+			}
+			
+			//do the game setup stuff
+			//if local, write the same args to the remote
+			//if remote, configure game 
+			
+		} else if (args.get(0) == "P"){
+			// pie rule
+			gm.moveNumber += 1;
+			if (gm.moveNumber == 2) {
+				//do a pie rule!
+			} else {
+				//return illegal
+			}
+			
+			//if this was locally-generated, write it to the remote.
+			if (isLocal) {
+				remote.remote_writer.println("P");
+			}		
+			//....handle the pie rule? idk bud
+			
+		} else if (args.get(0).matches("^[0-9]*$")) {
+			String moves = "";
+			gm.moveNumber += 1;
+			//if first char is a number (regular ol' move)
+			for (int i = 0; i < args.size(); i++) {
+				//move will have to be adjusted for this to work: make the error code actually work
+				System.out.println(args.get(0));
+				try {
+					int result = gm.move(Integer.parseInt(args.get(i)),  gm.currentPlayer); //do that move until there are no moves remaining
+					if (result == 0 || result == 1) {
+						//return a player, move successful; this should also make subsequent moves from the same input return illegal
+						gm.currentPlayer = result;
+						moves = moves + " " + Integer.parseInt(args.get(i));
+					} else {
+						//returned 2, move failed
+						//return "ILLEGAL";
+					}
+				} catch (NumberFormatException e) {
+					//this ain't a number........ stop that....
+				}
+			}
+			
+			if (isLocal) {
+				remote.remote_writer.println(moves);
+			}		
+		} else {
+			//return "Failed to handle input ;;;;";
+		}
+		//return "This should never show up";
+	return "honk";	
 	}
 	
-	void initializeAsClient(int port, String hostname) {
-		//hostname =  InetAddress.getLocalHost().getHostName(); // set hostname as self
-		server_write = new RemoteTask(buffer, Task.WRITE, Config.CLIENT);
-		server_read = new RemoteTask(buffer, Task.READ, Config.CLIENT);
-		server_general = new RemoteTask(buffer, Task.GENERAL, Config.CLIENT);
-		
-		server_general.in = Integer.toString(port);
-		server_general.in2 = hostname;
-		pool.execute(server_general);
-	}
-
-	void closeRemoteConnection() {
-		server_general.in = "close";
-		pool.execute(server_general);
-	}
-	
-
 }
 
 
@@ -354,6 +414,5 @@ class playButtonHandler implements EventHandler<ActionEvent>{
 		
 	}
 	
-	
-	
+
 }

@@ -10,7 +10,7 @@ public class Node {
 	Node(GameManager game){
 		root = game;
 		children = new ArrayList<GameManager>();
-		player = game.player;
+		player = game.currentPlayer;
 	}
 	void createChildren() {
 		validMoves();
@@ -21,7 +21,7 @@ public class Node {
 		}
 	}
 	void validMoves() {  //returns list of valid moves
-		if(root.player == 0) { //player's turn
+		if(root.currentPlayer == 0) { //player's turn
 			for(int i = 1; i < 7; i++) {
 				if(root.board[i] != 0)
 					moves.add(i);
