@@ -1,7 +1,6 @@
 package mancala;
 
 import java.net.InetAddress;
-
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
@@ -25,12 +24,14 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import javafx.geometry.Pos;
+import javafx.scene.layout.VBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
+import javafx.geometry.Pos;
+import javafx.event.ActionEvent;
 
-//TODO make the GUI check each cycle *not* be terrible
+
 //TODO see about deleting objects instead of just removing them from the root pane's list (memory leak?)
 //TODO Add displays: current player, each player's score; probably other things too 
 //TODO check on the pie rule function. maybe look into... making it cooler.
@@ -38,7 +39,6 @@ import javafx.scene.control.Button;
 enum Config {
 	CLIENT, SERVER, LOCAL
 }
-
 
 enum Source {
 	HUMAN, REMOTESERVER, REMOTECLIENT, AI
@@ -49,22 +49,10 @@ public class Test1 extends Application {
 //Defining variables for our overall application. god there's so many. 
 	private Vector<Pit> pits;
 	private Vector<Store> stores;
-
-	public int player = 0; // is this still needed?
-	static int numPits = 6; // is this still needed? YES? need a variable to pass into game manager
-	static int numPieces = 4;
-	//public int configType = 0;
-
+	public int numPits = 4; // is this still needed?
+	public int numPieces = 6;
 	private static Random key = new Random();
-	private Color player1Color = Color.SADDLEBROWN;
-	private Color player2Color = Color.DARKGOLDENROD;
 	Config config; //are we client or server?
-
-
-	static TextField setPits;
-	static TextField setPieces;
-	
-
 	
 	private GameManager gm = new GameManager(numPits, numPieces);
 	Pane root = new Pane(); // root pane
@@ -72,8 +60,6 @@ public class Test1 extends Application {
 
 	private DefaultListModel<String> buffer = new DefaultListModel<String>();
 	
-	
-	static int configType = 0;
 	//remote threads
 	Remote remote;
 	ExecutorService pool = Executors.newFixedThreadPool(1);
@@ -84,60 +70,81 @@ public class Test1 extends Application {
 	public static void main(String[] args) {
 		launch(args);
 	}
+	
+	@Override
+	  public void start(Stage primaryStage){
+	    
+		// Set the stage title
+	    primaryStage.setTitle("Mancala!");
 
+	    
+	    //create inputs
+	    TextField setPits = new TextField();
+	    TextField setPieces = new TextField();
+	    
+	    // create a label control
+	    //Label messageLabel = new Label("Virtual Game.");
+	    //valueLabel = new Label("Go ahead, Click!");
+	    Label pitsMessage = new Label("How many pits do you want on each side? (4-9)");
+	    Label piecesMessage = new Label("How many pieces do you want on each side? (1-10) (set negative for random distributon)");
+	    
+	    
+	    //create button control
+	    //Button scrabbleButton  = new Button("Scrabble");
+	    Button pvpButton = new Button("Play PvP");
+		
+		
+		
+	    
+	    // Register the event Handler
+	    //scrabbleButton.setOnAction(new ScrabbleButtonHandler());
+	    pvpButton.setOnAction(new pvpButtonHandler());
+		
+	    
+	    //put the label and button in a VBox with 10 pixels of spacing.
+	    //VBox  vbox = new VBox(10, messageLabel, scrabbleButton, clueButton, cardButton, bankButton, valueLabel);
+		VBox vbox = new VBox(10, pitsMessage,setPits,piecesMessage,setPieces,pvpButton);
+		vbox.setStyle("-fx-background-color: burlywood;");
+	    
+	    // create a Scene with the HBox as its root node
+	    // set the size of the scene (without this it is only as big as the label)
+	    Scene scene = new Scene(vbox, 720, 720, Color.BURLYWOOD);
+	    
+	    
+	    // center the Label
+	    vbox.setAlignment(Pos.CENTER);
+
+	    
+	    
+	    // Add the scene to the Stage
+	    primaryStage.setScene(scene);
+
+	    
+	    
+	    //show the window
+	    primaryStage.show();
+	    
+	    
+	  } //end start
+	/*
 	@Override
 	public void start(Stage primary) throws Exception {
 		primary.show(); // shows the scene in the newly-created application
-		//root.setPrefSize(135*(numPits+2), 720);
-		root.setPrefSize(720, 720);
+		root.setPrefSize(1080, 720);
 		root.setStyle("-fx-background-color: burlywood;");
+
+		pits = initializePits(root, gm);
+		stores = initializeStores(root, gm);
+		update_display(root, gm);
 		primary.setTitle("Mancala!");
-		
-		setPits = new TextField();
-		setPits.setPromptText("How Many Pits?");
-		setPits.relocate((720/2)-75,50);
-		root.getChildren().add(setPits);
-		
-		setPieces = new TextField();
-		setPieces.setPromptText("How Many Pieces?");
-		setPieces.relocate((720/2)-75,125);
-		root.getChildren().add(setPieces);
-		
-		
-		
-		Button play = new Button("Play");
-		root.getChildren().add(play);
-		
-		
-		//primary.show();
-		//update_display(root,gm);
-		
-		
-		primary.setScene(new Scene(root));
-		
-		
-		while(configType==0) {
-			int x = 3;
-			
-		}
-		
-		
-		//root.getChildren().remove(setPits);
-		
-		
-		//pits = initializePits(root, gm);
-		//stores = initializeStores(root, gm);
-		//update_display(root, gm);
-		
-		//primary.setScene(new Scene(root)); // sets stage to show the scene
-		
+		primary.setScene(new Scene(root)); // sets stage to show the scene
+
 		// canvas.getChildren().addAll(placeInitialShapes(pits));
 		primary.show(); // shows the scene in the newly-created application
 		
 		//placeholder input
 	    Scanner uinput = new Scanner(System.in);  // Create a Scanner object
 		System.out.println("hey idiot do you want to be a server? if yes type 1. client, type 2. to die, type a will saying you wanna leave me everything.");
-
 		int warble = Integer.parseInt(uinput.nextLine());
 		if (warble == 1) {
 			remote = new Remote(buffer, 80);
@@ -145,7 +152,6 @@ public class Test1 extends Application {
 		} else if (warble == 2) {
 			remote = new Remote(buffer, 80, InetAddress.getLocalHost().getHostName());
 			config = Config.CLIENT;
-
 		}
 		
 		//run our remote connection thread
@@ -153,7 +159,7 @@ public class Test1 extends Application {
 		// Add a listener to our buffer so it does stuff.		
 		buffer.addListDataListener(new BufferListener(buffer, remote));
 	}
-
+	*/
 	////////////////////////////////////////////////////////////////////////////////////////////
 	//Buffer listener
 	class BufferListener implements ListDataListener {
@@ -217,13 +223,13 @@ public class Test1 extends Application {
 				if (j == 1) {
 					// further player's pits; these are generated right-left
 					working_pit = new Pit(numPits * 130 + 85 - (i - 1) * 130, 260, i, 0, gm, root, buffer);
-					working_pit.setFill(player1Color);
+					working_pit.setFill(Color.SADDLEBROWN);
 					root.getChildren().add(working_pit);
 				} else {
 					// closer player's pits; these are generated left-right
 					working_pit = new Pit(working.get(numPits - 1).getCenterX() + 130 * (i - 1), 400, numPits + 1 + i, 1,
 							gm, root, buffer);
-					working_pit.setFill(player2Color);
+					working_pit.setFill(Color.DARKGOLDENROD);
 					root.getChildren().add(working_pit);
 				}
 				
@@ -263,7 +269,7 @@ public class Test1 extends Application {
 			double horizontal_location = (130 * Math.pow(-1, i)) + pits.get((numPits - 1) * (i)).getCenterX();
 			Store working = new Store(horizontal_location, vertical_location, 70, 125, i, gm, root, buffer);
 			working.place = numPits * i + i * 1;
-			working.setFill(i == 1 ? player1Color : player2Color);
+			working.setFill(i == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
 			root.getChildren().add(working);
 			working_vec.add(working);
 		}
@@ -401,16 +407,45 @@ public class Test1 extends Application {
 		//return "This should never show up";
 	return "honk";	
 	}
-	
 }
 
 
-class playButtonHandler implements EventHandler<ActionEvent>{
+
+class pvpButtonHandler implements EventHandler<ActionEvent>{
+
+	@Override
+	public void handle(ActionEvent event) {
+		//Test1.configType = 2;
+		//Test1.numPits = Integer.parseInt(Test1.setPits.getText());
+		Button testButton = new Button("Try Me");
+		testButton.setOnAction(new testHandle());
+		
+		VBox test = new VBox(10,testButton);
+		test.setStyle("-fx-background-color: burlywood;");
+		
+		Scene testScene = new Scene(test,720,720);
+		Stage testStage = new Stage();
+		testStage.setScene(testScene);
+		testStage.show();
+		
+		
+		
+		
+		System.out.println("You did it");
+		
+	}
+	
+
+}
+
+
+class testHandle implements EventHandler<ActionEvent>{
 	
 	@Override
 	public void handle(ActionEvent event) {
-		Test1.configType = 2;
-		Test1.numPits = Integer.parseInt(Test1.setPits.getText());
+		
+		
+		System.out.println("You did it XD XD XD");
 		
 	}
 	
