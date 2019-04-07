@@ -3,83 +3,49 @@ package mancala;
 import java.util.Vector;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.TimerTask;
+import java.util.Random;
 
 public class GameManager {
-
-	int[] board;
-	
-	int currentPlayer = 0; // whose turn is it right now?
-	int localPlayer = 0; //which player is local? (it can also be both of them so whatever)
-
-	int winner = 0;
+	public int[] board;
+	int size;
+	public int player = 0;
+	public boolean winner = false;
 	Scanner scanner = new Scanner(System.in);
-	int numPits = 6; //number of pits on each side of the board
-	int numPieces = 4; //average number of pieces / pit
-	long timeLimit = 0; //time in milliseconds for each player to make a move 
-	int moveNumber; //home many moves have been made this game.
-	Source playerInputs[] = {Source.HUMAN, Source.HUMAN}; //Will contain our tw o players' sources. Defaults to 2-player local
-	
-	long start_time; //time acknowledgement is received
-	long end_time;  //time move is received 
-	Boolean initialized = false;
-	Boolean expecting_move = true; //are we currently expecting a move from someone?
-	Boolean illegal_flag = false;
-	Boolean acknowledged = false; //have we received an OK for the latest move
-	
-	//randomizes the existing board: does NOT create a new board, so if u've changed numPits or anything things'll be changed!
-	void randomPieces() {  //used to create a random distribution of pieces, uses numPieces for average number
+	Random rand = new Random();
 
-		Random rnd = new Random();
-		int[] distro = new int[numPits];
+	GameManager(int size, int stones, boolean random) { //initializes board, inputs must be even
+		board = new int[size];
+		this.size = size;
+		int n;
 
-		//insures each pit has at least 1 piece
-		for(int k = 0; k < numPits; k++) {
-			distro[k]=1;
+		if(random) {			//random number of stones in each
+			while(stones > 0) {
+				for(int i = 1; i < size/2 ; i++) { //skip player and AI's kala
+					if(stones/2 != 1)
+						n = rand.nextInt(stones/2);
+					else
+						n = 1;
+					//System.out.println("Adding " + n + " stones to location " + i + " and " + (size - i));
+					board[i] = board[i] + n;						//user's side
+					board[size/2 + i] = board[size/2 + i] + n;				//computer's side
+					stones = stones - 2*n;				//decrease stones left to place
+					//System.out.println("Stones left: " + stones);
+					if(stones == 0)
+						break;
+				}
+			}
 		}
-		for(int i = 0; i < numPits*(numPieces-1); i++) {
-			distro[Math.abs(rnd.nextInt()%numPits)]++;
-		}
-		for(int j = 0; j < numPits; j++) {
-			board[j]=distro[j];
-			board[j+1+numPits]=distro[j];
-		}
-		
-	}
-
-
-	GameManager() { //initializes board
-
-		 board = new int[(2*numPits)+2];
-				 
-		for(int i = 1; i < (2*numPits)+2; i++) { //skip player's kala at 0
-			if(i == numPits+1)
-				i++;			//skip AI's kala
-			board[i] = numPieces;
-		}
-	}
-
-	//input of negative value trigger random distribution
-	//numPieces it set to absolute value of parameter
-	//this value is used as the average value for the pits
-	GameManager(int newPits, int newPieces) { //initializes board with values other that 6 pits and 4 pieces
-		
-		
-		numPits = newPits;
-		numPieces = Math.abs(newPieces);
-		board = new int[(2*numPits)+2];
-
-		for(int i = 1; i < (2*numPits)+2; i++) { //skip player's kala at 0
-			if(i == numPits+1)
-				i++;			//skip AI's kala
-			board[i] = numPieces;
-		}
-		if(newPieces<0) {
-			randomPieces();
+		else {			//same number of stones in each
+			for(int i = 1; i < size/2 ; i++) { //skip player and AI's kala
+				board[i] = stones;						//user's side
+				board[size/2 + i] = stones;				//computer's side
+			}
 		}
 	}
 
 	void pieRule() {
-		
+
 		for(int i = 0; i <= numPits; i++) {
 			int temp = board[i];
 			board[i] = board[i+numPits+1];
@@ -87,15 +53,16 @@ public class GameManager {
 		}
 
 	}
-	
-	
+
+
 	void run() {
-		
-		
+
+
 		boolean legal = false;
 		int selection = 0;
 		print();
-		System.out.println("Player's " + currentPlayer + " turn");
+		System.out.println("Player's " + player + " turn");
+
 
 
 		while(!legal) { //continues till legal move made
@@ -108,30 +75,24 @@ public class GameManager {
 
 		//check game over state
 		if(!playerHasStones() || !computerHasStones()) {
-			findWinner();								//game over calculate winner
-
+			winner();								//game over calculate winner
 		}
-
 		run();  //continue to run
 	}
 
 	boolean legalMove(int selection, int player) {
 		boolean legalMove = true;
 
-		if(board[selection] == 0 || selection > ((2*numPits)+2)-1) { //illegal move for any player (empty pit || out of bounds)
-			legalMove = false;
-		}
-
-		if(selection==0 || selection == numPits+1) { //illegal move (stores)
+		if(selection >= size) {   //illegal move for any player
 			legalMove = false;
 		}
 		if(player == 0) {
-			if(selection <= numPits+1) { //illegal move for player
+			if(selection == 0 || selection >= size/2) { //illegal move for player
 				legalMove = false;
 			}
 		}
 		else {
-			if(selection > numPits) { //illegal move for computer
+			if(selection <= size/2) { //illegal move for computer
 				legalMove = false;
 			}
 		}
@@ -143,12 +104,74 @@ public class GameManager {
 
 	}
 
-	int move(int selection, int player) {  //returns true after legal move made, returns false on illegal move
-
-		if (!legalMove(selection, player)) {
-			return 2;
+	void move(int selection) {
+		int grabbed = board[selection];
+		board[selection] = 0;		//remove marbles from pit
+ 		int move = selection; //move is next pit
+		int marblesWon;
+ 		//player's move
+		if(player == 0) {
+			while(grabbed > 0) { //while marbles left
+				move += 1; //place in next pit
+				if(move == size/2) {
+					move += 1;			//skip AI's kala
+				}
+				if(move > size - 1)  				//start over
+					move = 0;
+				board[move] = board[move] + 1;
+				grabbed = grabbed - 1;
+			}
+			if(move != 0) {
+				if(move < size/2) {  //on your side
+					if(board[move] == 1) { //empty pit its equal to one because you placed a stone in an empty pit)
+						int opposite = size - move;
+						System.out.println("Won pit: " + opposite);
+						marblesWon = board[opposite] + 1; //opposing pit plus capturing marble
+						board[opposite] = 0;				//set gathered pit's marble to 0
+						board[move] = 0;
+						board[0] += marblesWon;   		//adds marbles won to player's kala
+					}
+				}
+			//	System.out.println("switched players");
+				player = 1;		//other player's turn
+			}
+			else if(move == 0){ //landed in kala, go again
+				System.out.println("go again");
+			}
 		}
+ 		//AI's move
+		else {
+			while(grabbed > 0) { //while marbles left
+				move += 1;
+				if(move > size -1)  				//only move on your side
+					move = 1;				//skip player's kala
+				board[move] = board[move] + 1;
+				grabbed = grabbed - 1;
+			}
+			if(move != size/2) {  //not in kala
+				if(move > size/2) {
+					if(board[move] == 1) { //empty pit (its equal to one because you placed a stone in an empty pit)
+						int opposite = size - move;
+						System.out.println("Won pit: " + opposite);
+						marblesWon = board[opposite] + 1; //opposing pit plus capturing marble
+						board[opposite] = 0;				//set gathered pit's marble to 0
+						board[move] = 0;
+						board[size/2] += marblesWon;   		//adds marbles won to player's kala
+						}
+				}
+				player = 0; //other player's turn
+			}
+			else if(move == size/2) { //landed in kala, go again
+				System.out.println("go again");
+			}
+		}
+ 		if(!playerHasStones() || !computerHasStones()) {
+			winner();								//game over, calculate winner
+		}
+	}
 
+	/*
+	void move(int selection) {  //returns true after legal move made, returns false on illegal move
 		int grabbed = board[selection];
 		board[selection] = 0;		//remove marbles from pit
 
@@ -159,32 +182,36 @@ public class GameManager {
 		if(player == 0) {
 			while(grabbed > 0) { //while marbles left
 				move += 1; //place in next pit
-				if(move == numPits+1) {
+				if(move == size/2) {
 					move += 1;			//skip AI's kala
 				}
-				if(move > ((2*numPits)+2)-1)  				//start over
+				if(move >= size)  				//start over
 					move = 0;
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
 			}
-			
-			System.out.println("Move ended on: " + move);
+		//	System.out.println("Move ended on: " + move);
 			if(move == 0) { //landed in kala, go again
 				System.out.println("Go again!");
-				return 0;
+			//	run();
 			}
-			
+
 			else {
-				if(move < numPits+1) {  //on your side
+				if(move < size/2) {  //on your side
 					if(board[move] == 1) { //empty pit
-						int opposite = (2*numPits)+2 - move;
+						int opposite = size - move;
 						System.out.println("Won pit: " + opposite);
-						marblesWon = board[opposite] + 1; //opposing pit plus capturing marble
-						board[opposite] = 0;				//set gathered pit's marble to 0
+						marblesWon = board[size - move] + 1; //opposing pit plus capturing marble
+						board[size-move] = 0;				//set gathered pit's marble to 0
 						board[move] = 0;
 						board[0] += marblesWon;   		//adds marbles won to player's kala
 					}
 				}
+				//switch players
+				if(player == 0)
+					player = 1;
+				else
+					player = 0;
 			}
 		}
 
@@ -192,45 +219,49 @@ public class GameManager {
 		else {
 			while(grabbed > 0) { //while marbles left
 				move += 1;
-				if(move > ((2*numPits)+2)-1)  				//only move on your side
+				if(move >= size)  				//only move on your side
 					move = 1;				//skip player's kala
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
 			}
-			System.out.println("Move ended on: " + move);
-			if(move == numPits+1) { //landed in kala, go again
+		//	System.out.println("Move ended on: " + move);
+			if(move == size/2) { //landed in kala, go again
 				System.out.println("Go again!");
-				return 1;
+		//		run();
 			}
 			else {
-				if(move > numPits+1) {  //on your side
+				if(move > size/2) {  //on your side
 					if(board[move] == 1) { //empty pit
-						int opposite = (2*numPits)+2 - move;
+						int opposite = size - move;
 						System.out.println("Won pit: " + opposite);
 						marblesWon = board[opposite] + 1; //opposing pit plus capturing marble
 						board[opposite] = 0;				//set gathered pit's marble to 0
 						board[move] = 0;
-						board[numPits+1] += marblesWon;   		//adds marbles won to player's kala
+						board[size/2] += marblesWon;   		//adds marbles won to player's kala
 					}
 				}
+				//switch players
+				if(player == 0)
+					player = 1;
+				else
+					player = 0;
 			}
 		}
 		if(!playerHasStones() || !computerHasStones()) {
-			return findWinner();								//game over calculate winner
+			winner();								//game over calculate winner
 		}
-		return 1 - player;
 	}
-
+	*/
 	boolean playerHasStones() {    // need to add gather all stones
 		boolean playerHasStones = false;
 
-		for(int i = 1; i < numPits+1; i++) {
+		for(int i = 1; i < size/2; i++) {
 			if(board[i] > 0)
 				playerHasStones = true;
 		}
 		if(!playerHasStones) {
-			for(int i = numPits+2; i < (2*numPits)+2; i++) {
-				board[numPits+1] += board[i];
+			for(int i = size/2 + 1; i < size; i++) {
+				board[size/2] += board[i];
 				board[i] = 0;
 			}
 		}
@@ -240,12 +271,12 @@ public class GameManager {
 	boolean computerHasStones() {  // need to add gather all stones
 		boolean computerHasStones = false;
 
-		for(int i = numPits+2; i < (2*numPits)+2; i++) {
+		for(int i = size/2 + 1; i < size; i++) {
 			if(board[i] > 0)
 				computerHasStones = true;
 		}
 		if(!computerHasStones) {
-			for(int i = 1; i < numPits+1; i++) {
+			for(int i = 1; i < size/2; i++) {
 				board[0] += board[i];
 				board[i] = 0;
 			}
@@ -256,29 +287,32 @@ public class GameManager {
 	int findWinner() { //0 player 1 AI
 
 		System.out.println("Player 1's score: " + board[0]);
-		System.out.println("AI's score: " + board[numPits+1]);
-		if(board[0] > board[numPits+1])		//player wins
-			return 3;
-		else if(board[numPits+1] > board[0])	//AI wins
-			return 4;
-		else							//Tie
-			return 5;
+		System.out.println("AI's score: " + board[size/2]);
+		return (board[size/2] > board[0]);
 	}
+
+	TimerTask getInput = new TimerTask() {
+		public void run() {
+
+		}
+	};
 
 	void print() {
 		//print top
-		System.out.print("| ");
-		for(int i = (2*numPits)+2; i > numPits+1; i--) {
+		System.out.print(" | ");
+		for(int i = size - 1; i > size/2; i--) {
 			System.out.print(board[i] + " | ");
 		}
 		//print kalas
-		System.out.println("\n" + board[0] + "                       " + board[numPits+1]);
+		System.out.print("\n" + board[0]);
+		for(int i = 0; i < size; i++)
+			System.out.print("  ");
+		System.out.println(board[size/2]);
 		//print bottom
-		System.out.print("| ");
-		for(int i = 1; i < numPits+1; i++) {
+		System.out.print(" | ");
+		for(int i = 1; i < size/2; i++) {
 			System.out.print(board[i] + " | ");
 		}
 		System.out.println();
 	}
-
 }

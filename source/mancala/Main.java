@@ -15,7 +15,17 @@ package mancala;
 		GameManager gm = new GameManager(size, stones, random);
 		//gm.run();
 
-		GameManagerSimulator gmSim = new GameManagerSimulator(gm.board);
-		Tree tree = new Tree(gmSim);
+		//GameManagerSimulator gmSim = new GameManagerSimulator(gm.board);
+
+		gm.print();
+		Tree tree = new Tree(gm.board, gm.player);
+		int bestMove;
+		while(gm.playerHasStones() && gm.computerHasStones()) {
+			bestMove = tree.bestNextMove();
+			System.out.println("best next move: " + bestMove);
+			gm.move(bestMove);
+			gm.print();
+			tree = new Tree(gm.board, gm.player);
+		}
 	}
 }*/
