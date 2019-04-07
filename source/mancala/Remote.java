@@ -4,8 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 import javax.swing.DefaultListModel;
 
@@ -17,42 +19,63 @@ public class Remote implements Runnable {
 	public DefaultListModel<String> buffer;
 	private Socket remoteSocket;
 	private ServerSocket listenSocket;
+	String store;
 	Config config; //client or server
 
 	Remote(DefaultListModel<String> _buffer, int _port) {
 		//initialize as server
 		buffer = _buffer;
-		try {
-			listenSocket = new ServerSocket(_port); 	
-			System.out.println("Server created.");
-			
-		} catch (IOException e) {
-			System.out.println("Server creation failed");
+		Boolean scanning = true;
+		while (scanning) {
+			try {
+		
+				listenSocket = new ServerSocket(_port); 
+				remoteSocket = listenSocket.accept();
+				System.out.println("Server created.");
+				scanning = false;
+			} catch (SocketException se) {
+				try {
+					System.out.println("Client connection failed: trying again in 2 sec");
+					Thread.sleep(2000);
+				} catch (InterruptedException ie) {
+					ie.printStackTrace();
+				}
+			} catch (IOException e) {
+				System.out.println("Server creation failed");
+			}
 		}
 	}
 	
 	Remote(DefaultListModel<String> _buffer, int _port, String hostname) {
 		//initialize as client
 		buffer = _buffer;
-		try {
-			remoteSocket = new Socket(hostname, _port);
-		} catch (IOException e) {
-			System.out.println("Server connection failed");
+		Boolean scanning = true;
+		while (scanning) {
+			try { 
+				remoteSocket = new Socket(hostname, _port);
+				scanning = false;
+			} catch (SocketException e) {
+				try {
+					System.out.println("Server connection failed; trying again in 2s");
+					Thread.sleep(2000);
+				} catch (InterruptedException ie) {
+					//well gosh darn! rude.
+					ie.printStackTrace();
+				}
+			} catch (IOException ioe) {
+				//I don't even know what an IOException is 
+			}
 		}
-
 	}
 	
-	//run(): This is run in a thread because... uh....
-	//well. because I did this wrong but along the way I made the server not hang, so.
-	//good enough, okay? The server program doesn't hang while waiting for a client. yay.
 	@Override
 	public void run() {
 		try {
 			if (listenSocket != null) {
-				remoteSocket = listenSocket.accept();
 				remote_writer = new PrintWriter(remoteSocket.getOutputStream(), true);
 				remote_reader = new BufferedReader( new InputStreamReader(remoteSocket.getInputStream()));
 				remote_writer.println("WELCOME");
+				remote_writer.println(store);
 				System.out.println("Client Connected.");
 			} else {
 				remote_writer = new PrintWriter(remoteSocket.getOutputStream(), true);

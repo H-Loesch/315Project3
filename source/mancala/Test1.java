@@ -77,6 +77,7 @@ public class Test1 extends Application {
 	
 	Remote remote;
 	ExecutorService pool = Executors.newFixedThreadPool(1);
+	static Boolean flag;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //GUI management and main
@@ -93,6 +94,7 @@ public class Test1 extends Application {
 		root.show();
 		// Set the stage title
 		root.setTitle("Mancala!");
+		buffer.addListDataListener(new BufferListener(buffer, remote));
 		
 		//create button control
 		//Button scrabbleButton  = new Button("Scrabble");
@@ -117,25 +119,25 @@ public class Test1 extends Application {
 	 	    @Override public void handle(ActionEvent e) {
 				config = Config.LOCAL;
 				
-				GridPane opener_2_grid = createGrid();
+				GridPane opener_two_grid = createGrid();
 				
 				//create 1st set of radio buttons
-				final ToggleGroup player1 = createRadioButtons(opener_2_grid, "Human", "Computer", "Player 1", 0);
-				final ToggleGroup player2 = createRadioButtons(opener_2_grid, "Human", "Computer", "Player 2", 2);
+				final ToggleGroup player1 = createRadioButtons(opener_two_grid, 0, "Human", "Computer", "Player 1");
+				final ToggleGroup player2 = createRadioButtons(opener_two_grid, 1, "Human", "Computer", "Player 2");
 											
-				TextField pit_number_field = createNumPitField(opener_2_grid, 4);
-				TextField piece_number_field = createNumPieceField(opener_2_grid, 5);
-				TextField time_limit_field = createTimeLimitField(opener_2_grid, 6);
+				TextField pit_number_field = createInputField(opener_two_grid, 2, "# of pits on each side");
+				TextField piece_number_field = createInputField(opener_two_grid, 3, "Average # of pieces in pits");
+				TextField time_limit_field = createInputField(opener_two_grid, 4, "Time limit / move ; 0 -> no limit");
 				
-				final ToggleGroup distribution = createRadioButtons(opener_2_grid, "Random", "Standard", "Distribution of pieces", 7);
-				final ToggleGroup first = createRadioButtons(opener_2_grid, "Player 1", "Player 2", "Who goes first?", 9);
+				final ToggleGroup distribution = createRadioButtons(opener_two_grid, 5, "Random", "Standard", "Distribution of pieces");
+				final ToggleGroup first = createRadioButtons(opener_two_grid, 6, "Player 1", "Player 2", "Who goes first?");
 				Button play_button = new Button("Play mancala!!");
-				GridPane.setConstraints(play_button, 1, 11, 1, 1);
+				GridPane.setConstraints(play_button, 1, 7, 1, 1);
 				
-				opener_2_grid.getChildren().addAll(play_button);
+				opener_two_grid.getChildren().addAll(play_button);
 				
 				//putting in a VBox AND HBox bc that's the easiest way I could think of to center things.
-				VBox opener_two_vbox = new VBox(20, opener_2_grid);
+				VBox opener_two_vbox = new VBox(20, opener_two_grid);
 				opener_two_vbox.setAlignment(Pos.CENTER);
 				HBox opener_two_hbox = new HBox(20, opener_two_vbox);
 				opener_two_hbox.setAlignment(Pos.CENTER);
@@ -198,9 +200,8 @@ public class Test1 extends Application {
 							message = message + "S"; //Standard distribution
 						}
 			 	    	
-						System.out.println(message);
-			 	    	//now get stuff from our radio buttons
-			 	    	//if (player1.getSelectedToggle().toString())
+						buffer.addElement(message);
+						initializeGUI();
 			 	    }
 				});
 			}
@@ -208,71 +209,158 @@ public class Test1 extends Application {
 		
 		remote_client_button.setOnAction(new EventHandler<ActionEvent>() {
 			@Override public void handle(ActionEvent e) {
-				local_players = 1;
 				config = Config.CLIENT;
+				gm.playerInputs[0] = Source.REMOTESERVER;
+				
+				GridPane opener_two_grid = createGrid();
+				final ToggleGroup player2 = createRadioButtons(opener_two_grid, 0, "Human", "Computer", "Player 1");
+				TextField hostname_field = createInputField(opener_two_grid, 1, "Hostname to connect to");
+				TextField port_field = createInputField(opener_two_grid, 2, "Port to connect to"); // I'm unsure of how needed this is...
+				//something for hostname
+				//something for port
+				
+				Button play_button = new Button("Play mancala!!");
+				GridPane.setConstraints(play_button, 1, 7, 1, 1);
+				
+				opener_two_grid.getChildren().addAll(play_button);
+				
+				//putting in a VBox AND HBox bc that's the easiest way I could think of to center things.
+				VBox opener_two_vbox = new VBox(20, opener_two_grid);
+				opener_two_vbox.setAlignment(Pos.CENTER);
+				HBox opener_two_hbox = new HBox(20, opener_two_vbox);
+				opener_two_hbox.setAlignment(Pos.CENTER);
+				opener_two_hbox.setStyle("-fx-background-color: burlywood;");
+				
+				Scene opener_2 = new Scene(opener_two_hbox, 720, 720, Color.BURLYWOOD);
+				root.setScene(opener_2);
+				//then DON'T pass that to anywhere: just initialize a remote socket with that info. 
+				//then wait for that remote socket to be accepted.
 				//root.setScene();
 				//run the other thing
+			
+			
+				play_button.setOnAction(new EventHandler<ActionEvent>() {
+					@Override public void handle(ActionEvent e) {
+						if (((RadioButton) player2.getSelectedToggle()) == null) {
+							return;
+						} else if (((RadioButton) player2.getSelectedToggle()).getText().equals("Human")) {
+							gm.playerInputs[1] = Source.HUMAN;
+						} else if (((RadioButton) player2.getSelectedToggle()).getText().equals("Computer")) {
+							gm.playerInputs[1] = Source.AI;
+						}
+						
+						//what port number to open our remote on: because I can't be bothered to figure out why constructing a remote with it here doesn't work.
+						if (port_field.getText().matches("\\d*") && !hostname_field.getText().equals("")) {
+			 	    		int port = Integer.parseInt(port_field.getText());
+			 	    		String hostname = hostname_field.getText();
+			 	    		remote = new Remote(buffer, port, hostname);
+			 	    		
+			 	    		try {
+			 	    			//we SHOULD be in the GUI thread when this runs. meaning that 
+			 	    			pool.execute(remote);
+			 	    			Thread.sleep(2000); //wait two seconds.
+			 	    			initializeGUI();
+			 	    			
+			 	    		} catch (InterruptedException ie) {
+			 	    			//...huh. I wonder why that didn't work...?
+			 	    			//just... don't do anything. If this breaks probably everything else is too.
+			 	    		}
+			 	    	} else {return;}
+					}
+				});
 			}
 		});
 		
 		remote_server_button.setOnAction(new EventHandler<ActionEvent>() {
 			@Override public void handle(ActionEvent e) {
-				local_players = 1;
 				config = Config.SERVER;
+				gm.playerInputs[1] = Source.REMOTECLIENT;
+				GridPane opener_two_grid = createGrid();
+				
+				//create 1st set of radio buttons
+				final ToggleGroup player1 = createRadioButtons(opener_two_grid, 0, "Human", "Computer", "Player 1");
+									
+				TextField port_field = createInputField(opener_two_grid, 1, "Port to listen on"); // I'm unsure of how needed this is...
+				TextField pit_number_field = createInputField(opener_two_grid, 2, "# of pits on each side");
+				TextField piece_number_field = createInputField(opener_two_grid, 3, "Average # of pieces in pits");
+				TextField time_limit_field = createInputField(opener_two_grid, 4, "Time limit / move ; 0 -> no limit");
+				
+				final ToggleGroup distribution = createRadioButtons(opener_two_grid, 5, "Random", "Standard", "Distribution of pieces");
+				final ToggleGroup first = createRadioButtons(opener_two_grid, 6, "Client", "Server", "Who goes first?");
+				Button play_button = new Button("Play mancala!!");
+				GridPane.setConstraints(play_button, 1, 7, 1, 1);
+				
+				opener_two_grid.getChildren().addAll(play_button);
+				
+				//putting in a VBox AND HBox bc that's the easiest way I could think of to center things.
+				VBox opener_two_vbox = new VBox(20, opener_two_grid);
+				opener_two_vbox.setAlignment(Pos.CENTER);
+				HBox opener_two_hbox = new HBox(20, opener_two_vbox);
+				opener_two_hbox.setAlignment(Pos.CENTER);
+				opener_two_hbox.setStyle("-fx-background-color: burlywood;");
+				
+				Scene opener_2 = new Scene(opener_two_hbox, 720, 720, Color.BURLYWOOD);
+				root.setScene(opener_2);
+				
+				play_button.setOnAction(new EventHandler<ActionEvent>() {
+			 	    @Override public void handle(ActionEvent e) {
+			 	    	String message = "LOCAL INFO ";
+			 	    	//grab numPits, numPieces, and time limits from the input fields. If they're not numbers, then don't bother.
+			 	    	if (pit_number_field.getText().matches("\\d*")) {
+			 	    		int val = Integer.parseInt(pit_number_field.getText());
+			 	    		if (val > 3 && val < 10) {
+			 	    			message = message + val + " ";
+			 	    		} else {return;}
+			 	    	} else {return;}
+			 	    	if (piece_number_field.getText().matches("\\d*")) {
+			 	    		int val = Integer.parseInt(piece_number_field.getText());
+			 	    		if (val > 0 && val < 11) {
+			 	    			message = message + val + " ";
+			 	    		} else {return;}
+			 	    	} else {return;}
+			 	    	if (time_limit_field.getText().matches("\\d*")) {
+			 	    		long val = Long.parseLong(time_limit_field.getText());
+			 	    		message = message + val + " ";
+			 	    	} else {return;}
+			 	    	
+			 	    	if (((RadioButton) player1.getSelectedToggle()) == null) {
+			 	    		return;
+			 	    	} else if (((RadioButton) player1.getSelectedToggle()).getText().equals("Human")) {
+			 	    		gm.playerInputs[0] = Source.HUMAN;
+			 	    	} else if (((RadioButton) player1.getSelectedToggle()).getText().equals("Computer")) {			
+			 	    		gm.playerInputs[0] = Source.AI;
+			 	    	}
+			 	    	
+			 	    	if (((RadioButton) first.getSelectedToggle()) == null) {
+							return;
+						} else if (((RadioButton) first.getSelectedToggle()).getText().equals("Server")) {
+							message = message + "S "; //whoever's receiving this goes second
+						} else if (((RadioButton) first.getSelectedToggle()).getText().equals("Client")) {
+							message = message + "F "; //whoever's receiving this goes first
+						}
+						
+						if (((RadioButton) distribution.getSelectedToggle()) == null) {
+							return;
+						} else if (((RadioButton) distribution.getSelectedToggle()).getText().equals("Random")) {
+							message = message + "R"; //random distribution (we'll let buffer handler actually make this part of the message)
+						} else if (((RadioButton) distribution.getSelectedToggle()).getText().equals("Standard")) {
+							message = message + "S"; //Standard distribution
+						}
+						
+						if (port_field.getText().matches("\\d*")) {
+							remote = new Remote(buffer, Integer.parseInt(port_field.getText()));
+							buffer.addElement(message);
+							initializeGUI();
+							pool.execute(remote);
+						} else {return;}
+			 	    }
+				});
 			}
 		});
-		
-		
-		// center the Label
-		
-		
-		
 
-	  } //end start
-	/*
-	@Override
-	public void start(Stage primary) throws Exception {
-		primary.show(); // shows the scene in the newly-created application
-		root.setPrefSize(1080, 720);
-		root.setStyle("-fx-background-color: burlywood;");
-
-		pits = initializePits(root, gm);
-		stores = initializeStores(root, gm);
-		update_display(root, gm);
-		primary.setTitle("Mancala!");
-		primary.setScene(new Scene(root)); // sets stage to show the scene
-
-		// canvas.getChildren().addAll(placeInitialShapes(pits));
-		primary.show(); // shows the scene in the newly-created application
-
-		//placeholder input
-	    Scanner uinput = new Scanner(System.in);  // Create a Scanner object
-		System.out.println("hey idiot do you want to be a server? if yes type 1. client, type 2. to die, type a will saying you wanna leave me everything.");
-		int warble = Integer.parseInt(uinput.nextLine());
-		if (warble == 1) {
-			remote = new Remote(buffer, 80);
-			config = Config.SERVER;
-			gm.playerInputs[0] = Source.HUMAN;
-			gm.playerInputs[1] = Source.REMOTECLIENT;
-		} else if (warble == 2) {
-			remote = new Remote(buffer, 80, InetAddress.getLocalHost().getHostName());
-			config = Config.CLIENT;
-			gm.playerInputs[1] = Source.HUMAN;
-			gm.playerInputs[0] = Source.REMOTESERVER;
-		}
-
-		//run our remote connection thread
-		pool.execute(remote);
-		// Add a listener to our buffer so it does stuff.
-		buffer.addListDataListener(new BufferListener(buffer, remote));
-
-		/*
-		String inputLine;
-		while (warble == 1 && (inputLine = uinput.nextLine()) != null) {
-			//read repeatedly
-			remote.remote_writer.println(inputLine); //legit I built this to run off the buffer so just. write to that
-
-		}*/
+	}   //end start
+	
+	
 
 	
 	
@@ -331,16 +419,16 @@ public class Test1 extends Application {
 		 */
 
 		for (int j = 1; j <= 2; j++) {
-			for (int i = 1; i <= numPits; i++) {
+			for (int i = 1; i <= gm.numPits; i++) {
 				Pit working_pit;
 				if (j == 1) {
 					// further player's pits; these are generated right-left
-					working_pit = new Pit(numPits * 130 + 85 - (i - 1) * 130, 260, i, 0, gm, root, buffer);
+					working_pit = new Pit(gm.numPits * 130 + 85 - (i - 1) * 130, 260, i, 0, gm, root, buffer);
 					working_pit.setFill(Color.SADDLEBROWN);
 					root.getChildren().add(working_pit);
 				} else {
 					// closer player's pits; these are generated left-right
-					working_pit = new Pit(working.get(numPits - 1).getCenterX() + 130 * (i - 1), 400, numPits + 1 + i, 1,
+					working_pit = new Pit(working.get(gm.numPits - 1).getCenterX() + 130 * (i - 1), 400, gm.numPits + 1 + i, 1,
 							gm, root, buffer);
 					working_pit.setFill(Color.DARKGOLDENROD);
 					root.getChildren().add(working_pit);
@@ -358,9 +446,9 @@ public class Test1 extends Application {
 		double vertical_location = (pits.get(0).getCenterY() + pits.lastElement().getCenterY()) / 2.0;
 
 		for (int i = 0; i < 2; i++) {
-			double horizontal_location = (130 * Math.pow(-1, i)) + pits.get((numPits - 1) * (i)).getCenterX();
+			double horizontal_location = (130 * Math.pow(-1, i)) + pits.get((gm.numPits - 1) * (i)).getCenterX();
 			Store working = new Store(horizontal_location, vertical_location, 70, 125, i, gm, root, buffer);
-			working.place = numPits * i + i * 1;
+			working.place = gm.numPits * i + i * 1;
 			working.setFill(i == 1 ? Color.SADDLEBROWN : Color.DARKGOLDENROD);
 			root.getChildren().add(working);
 			working_vec.add(working);
@@ -380,9 +468,9 @@ public class Test1 extends Application {
 
 	void update_display(Pane root, GameManager gm) {
 		for (Pit change_pit : pits) {
-			while (change_pit.size > gm.board[change_pit.place])
+			while (change_pit.size > gm.board[change_pit.place - change_pit.player])
 				root.getChildren().remove(change_pit.removePiece());
-			while (change_pit.size < gm.board[change_pit.place])
+			while (change_pit.size < gm.board[change_pit.place - change_pit.player])
 				root.getChildren().add(change_pit.addPiece());
 		}
 
@@ -456,34 +544,49 @@ public class Test1 extends Application {
 		} else if (args.get(0).equals("INFO")) {
 
 			//THIS initializes our gameboard. None of the board should be initialized until this is ran.
-			numPits = Integer.parseInt(args.get(1));
-			numPieces = Integer.parseInt(args.get(2));
+			gm.numPits = Integer.parseInt(args.get(1));
+			gm.numPieces = Integer.parseInt(args.get(2));
 			gm.timeLimit = Long.parseLong(args.get(3));
 			if (args.get(4).equals("F")) {
 				//client goes first
+				gm.currentPlayer = 1;
 			} else if (args.get(4).equals("S")) {
+				//THIS MAY OR MAY NOT FUNCTION AS IT SHOULD. REALLY COULDN'T TELL YA. YET
+				//TODO verify
 				//server goes first
+				gm.currentPlayer = 0;
 			}
 
-			//probably call our initialization of the board in this block here.
-			//Call a diff one depending on if 5 is S or R
 			if (args.get(5).equals("S")) {
-				//god is good. Normal configuration.
+				//satndard config
+				gm.board = new GameManager(gm.numPits, gm.numPieces).board;
 			} else if (args.get(5).equals("R")) {
-				//god is not good. Random configuration. Initialize with the desired layout of pits.
+				//random config
+				//TODO THIS ISN'T REALLY DONE LOL
+				if (isLocal) {
+					gm.board = new GameManager(gm.numPits, gm.numPieces).board;
+					gm.randomPieces();
+					//send modified message to client
+				} else {
+					//set the board like the server did 
+				}
+				gm.randomPieces();
 			}
+				
+			if (isLocal && config != Config.LOCAL) {
+				String out = "";
+				for (int i = 0; i < args.size(); i++) {out = out + " " + args.elementAt(i);}
+				out = out.substring(1); //remove first space
+				remote.store = out; //send to remote once we have it up and running.
+			} else if (config != Config.LOCAL) {
+				remote.remote_writer.println("READY");
+				if (gm.playerInputs[gm.currentPlayer] != Source.REMOTESERVER ) {
+					//oh jeez it's our turn better do smth with that lol
+				}
+			}
+			
 
 			gm.initialized = true;
-			//do the game setup stuff
-			//if local, write the same args to the remote
-
-			if (isLocal) {
-				String out = "";
-				for (int i = 0; i < args.size(); i++) {out = out + args.get(i) + " ";}
-				remote.remote_writer.println(out);
-			} else {
-				//we received this from server, so we should.... initialize that stuff, huh?
-			}
 			return null;
 
 		} else if (args.get(0).equals("P")) {
@@ -611,70 +714,11 @@ public class Test1 extends Application {
 		}
 		//return "This should never show up";
 	}
-
-
-	class pvpButtonHandler implements EventHandler<ActionEvent>{
-	
-		@Override
-		public void handle(ActionEvent event) {
-			//Test1.configType = 2;
-			//Test1.numPits = Integer.parseInt(Test1.setPits.getText());
-			Button testButton = new Button("Try Me");
-			testButton.setOnAction(new testHandle());
-	
-			VBox test = new VBox(10,testButton);
-			test.setStyle("-fx-background-color: burlywood;");
-	
-			Scene testScene = new Scene(test,720,720);
-			Stage testStage = new Stage();
-			testStage.setScene(testScene);
-			testStage.show();
-	
-	
-	
-	
-			System.out.println("You did it");
-	
-		}
-	
-	
-	}
-	
-	
-	class testHandle implements EventHandler<ActionEvent>{
-	
-		@Override
-		public void handle(ActionEvent event) {
-			/*
-			Button cardDealButton  = new Button("Deal");
-	
-		    TextField dealNum = new TextField();
-		    dealNum.setPromptText("How many cards do you want?");
-	
-		    //cardLabel = new Label();
-	
-		    //cardDealButton.setOnAction(new cardDealButtonHandler());
-	
-		    VBox  cardBox = new VBox(10, dealNum, cardDealButton);
-		    //cardLabel.setText("Select an Option");
-		    Scene cardScene = new Scene(cardBox, 300, 300);
-		    cardBox.setAlignment(Pos.CENTER);
-		    Stage cardStage = new Stage();
-		    cardStage.setScene(cardScene);
-		    cardStage.show();
-			*/
-			System.out.println("You did it XD XD XD");
-	
-	
-		}
-	
-	
-	}
 	
 	
 ////////////////////////////////////////////////////////////////////////////////
 //GUI setup functions, cuz jesus it's ugly without these 
-	private ToggleGroup createRadioButtons(GridPane pane, String name1, String name2, String label, int start) {
+	private ToggleGroup createRadioButtons(GridPane pane, int start, String name1, String name2, String label) {
 		ToggleGroup group = new ToggleGroup();
 		RadioButton choice1 = new RadioButton(name1);
 		RadioButton choice2 = new RadioButton(name2);
@@ -701,28 +745,26 @@ public class Test1 extends Application {
 		return grid;
 	}
 	
-	private TextField createNumPitField(GridPane grid, int start) {
+	private TextField createInputField(GridPane grid, int start, String prompt ) {
 		final TextField pit_number_field = new TextField();
-		pit_number_field.setPromptText("# of pits on each side");
+		pit_number_field.setPromptText(prompt);
+		
 		GridPane.setConstraints(pit_number_field, 0, start, 2, 1);
 		grid.getChildren().add(pit_number_field);
 		return pit_number_field;
 	}
-	
-	private TextField createNumPieceField(GridPane grid, int start) {
-		final TextField piece_number_field = new TextField();
-		piece_number_field.setPromptText("Average # of pieces in pits");
-		GridPane.setConstraints(piece_number_field, 0, start, 2, 1);
-		grid.getChildren().add(piece_number_field);
-		return piece_number_field;
-	}
-	
-	TextField createTimeLimitField(GridPane grid, int start) {
-		final TextField time_limit_field = new TextField(); 
-		time_limit_field.setPromptText("Time limit / move ; 0 -> no limit");
-		GridPane.setConstraints(time_limit_field,  0,  start,  2,  1);
-		grid.getChildren().add(time_limit_field);
-		return time_limit_field;
+
+	private void initializeGUI() {
+		Pane gameboard = new Pane();
+		pits = initializePits(gameboard, gm);
+		stores = initializeStores(gameboard, gm);
+		update_display(gameboard, gm);
+		
+		HBox showtime_hbox = new HBox(20, gameboard);
+		showtime_hbox.setAlignment(Pos.CENTER);
+		showtime_hbox.setStyle("-fx-background-color: burlywood;");
+		Scene showtime = new Scene(showtime_hbox,  1500, 600, Color.BURLYWOOD);
+		root.setScene(showtime);
 	}
 
 }
