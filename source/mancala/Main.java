@@ -6,7 +6,7 @@ public class Main {
 	public static void main(String[] args) {
 		int size;
 		int stones;
-		boolean random = false;
+		boolean random = true;
 		
 		Scanner scanner = new Scanner(System.in);
 		System.out.println("Size of board: ");
@@ -18,7 +18,16 @@ public class Main {
 		//gm.run();
 		
 		//GameManagerSimulator gmSim = new GameManagerSimulator(gm.board);
-		Tree tree = new Tree(gm.board);
-		//System.out.println("best next move: " + tree.bestNextMove());
+		
+		gm.print();
+		Tree tree = new Tree(gm.board, gm.player);
+		int bestMove;
+		while(gm.playerHasStones() && gm.computerHasStones()) {
+			bestMove = tree.bestNextMove();
+			System.out.println("best next move: " + bestMove);
+			gm.move(bestMove);
+			gm.print();
+			tree = new Tree(gm.board, gm.player);
+		}
 	}
 }

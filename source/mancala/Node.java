@@ -22,6 +22,37 @@ import java.util.*;
 		size = board.length;
 	}
  	
+ 	void makeValidMoves() {  //returns list of valid moves
+ 	//	System.out.println("Making moves for board: ");
+ 	//	print();
+		if(player == 0) { //player's turn
+			for(int i = 1; i < size/2; i++) {
+				if(board[i] != 0) {
+					Node child = new Node(board, player, depth+1);
+					child.move(i);
+					children.add(child);
+					moves.add(i);
+				//	System.out.println("Made move: " + i);
+				//	child.print();
+				}
+				
+			}
+		}
+		else { //computer's turn
+			for(int i = size/2+1; i < size; i++) {
+				if(board[i] != 0) {
+					Node child = new Node(board, player, depth+1);
+					child.move(i);
+					children.add(child);
+					moves.add(i);
+			//		System.out.println("Made move: " + i);
+			//		child.print();
+				}
+			}
+		}
+	}
+ 	
+ /*	
  	void validMoves() {  //returns list of valid moves
 		if(player == 0) { //player's turn
 			for(int i = 1; i < size/2; i++) {
@@ -38,10 +69,8 @@ import java.util.*;
 			}
 		}
 	}
- 	
+ 	*/
  	void move(int selection) {
-		print();
-		System.out.println("Player " + player + " picked " + selection);
 		int grabbed = board[selection];
 		board[selection] = 0;		//remove marbles from pit
  		int move = selection; //move is next pit
@@ -61,8 +90,6 @@ import java.util.*;
 			if(move != 0) {
 				if(move < size/2) {  //on your side
 					if(board[move] == 1) { //empty pit its equal to one because you placed a stone in an empty pit)
-						int opposite = size - move;
-						System.out.println("Player 0 won pit: " + opposite);
 						marblesWon = board[size - move] + 1; //opposing pit plus capturing marble
 						board[size-move] = 0;				//set gathered pit's marble to 0
 						board[move] = 0;
@@ -72,7 +99,7 @@ import java.util.*;
 				player = 1;		//other player's turn
 			}
 			else if(move == 0){ //landed in kala, go again
-				System.out.println("Go again!");
+		
 			}
 		}
  		//AI's move
@@ -87,7 +114,6 @@ import java.util.*;
 			if(move > size/2) {  //on your side
 				if(board[move] == 1) { //empty pit (its equal to one because you placed a stone in an empty pit)
 					int opposite = size - move;
-					System.out.println("Player 1 won pit: " + opposite);
 					marblesWon = board[opposite] + 1; //opposing pit plus capturing marble
 					board[opposite] = 0;				//set gathered pit's marble to 0
 					board[move] = 0;
@@ -96,20 +122,18 @@ import java.util.*;
 				player = 0; //other player's turn
 			}
 			else if(move == size/2) { //landed in kala, go again
-				System.out.println("Go again!");
+		
 			}
 		}
  		if(!playerHasStones() || !computerHasStones()) {
 			winner();								//game over, calculate winner
 		}
- 		System.out.println("move complete");
- 		print();
- 	//	evalMove();
+ 		evalMove();
 	}
  	
  	void evalMove() {
- 		int defend = 2;
- 		int capture = 2;
+ 		int defend = 1;   //enemy cant claim your pits by landing here
+ 		int capture = 1;	//can claim enemy pits by landing here
  		
  		//player 1's board score
  		p1Score = board[0];
@@ -138,28 +162,15 @@ import java.util.*;
  		}
  		
  		if(playerWon == 1) { //player 1 won
- 			p1Score = 500;
- 			p2Score = -500;
+ 			p1Score = 50000;
+ 			p2Score = -50000;
  		}
  		else if(playerWon == 2) { //player 2 won
- 			p1Score = -500;
- 			p2Score = 500;
+ 			p1Score = -50000;
+ 			p2Score = 50000;
  		}
  	}
  	
- 	int sumEvalsP1() {
- 		for(int i = 0; i < children.size(); i++) {
- 			p1Score += children.get(i).sumEvalsP1();
- 		}
- 		return p1Score;
- 	}
- 	
- 	int sumEvalsP2() {
- 		for(int i = 0; i < children.size(); i++) {
- 			p2Score += children.get(i).sumEvalsP1();
- 		}
- 		return p2Score;
- 	}
  	
  	boolean playerHasStones() {    // need to add gather all stones
 		boolean playerHasStones = false;
@@ -190,8 +201,8 @@ import java.util.*;
 		return computerHasStones;
 	}
  	void winner() { //0 player 1 AI
-		System.out.println("Player 1's score: " + board[0]);
-		System.out.println("AI's score: " + board[size/2]);
+	//	System.out.println("Player 1's score: " + board[0]);
+	//	System.out.println("AI's score: " + board[size/2]);
 		if(board[0] > board[size/2])		//player wins
 			playerWon = 0;
 		else if(board[size/2] > board[0])	//AI wins
