@@ -78,7 +78,7 @@ public class Pit extends javafx.scene.shape.Circle{
         		//check if move is legal here, or something?
 
         		//add that move to the buffer if the move is legal
-        		if (gm.legalMove(place, gm.currentPlayer) || gm.playerInputs[gm.currentPlayer] == Source.HUMAN) {
+        		if (gm.legalMove(place, gm.currentPlayer) && gm.playerInputs[gm.currentPlayer] == Source.HUMAN) {
         			//only allow pushing this to buffer if it's legal and it's actually your turn.
         			//also, let's preface it with LOCAL so that our input handler will know it's not from a remote source 
         			buffer.addElement( "LOCAL " + Integer.toString(place));

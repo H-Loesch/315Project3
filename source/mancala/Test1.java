@@ -38,7 +38,9 @@ import javafx.event.ActionEvent;
 //TODO check on the pie rule function. maybe look into... making it cooler.
 	//Probably smart to write the rest of the program in such a way that it can be done by just switching a few vars in the gm or smth.
 //TODO figure out what happens when the buffer receives a new item while already processing one 
-	//use mutexes or something to make it not be a problem?
+	//use mutexes or something to make it not be a problem?	
+	//this may not actually be a problem, cuz the remote or GUI thread (whichever trigger buffer change) are the ones that go thru that function
+//TODO some sort of Bool to track whether we are currently accepting a move. 
 enum Config {
 	CLIENT, SERVER, LOCAL
 }
@@ -158,12 +160,14 @@ public class Test1 extends Application {
 		if (warble == 1) {
 			remote = new Remote(buffer, 80);
 			config = Config.SERVER;
+			gm.playerInputs[0] = Source.HUMAN;
 			gm.playerInputs[1] = Source.REMOTECLIENT;
 		} else if (warble == 2) {
 			remote = new Remote(buffer, 80, InetAddress.getLocalHost().getHostName());
 			config = Config.CLIENT;
 
-			gm.playerInputs[1] = Source.REMOTESERVER;
+			gm.playerInputs[1] = Source.HUMAN;
+			gm.playerInputs[0] = Source.REMOTESERVER;
 
 		}
 		
@@ -172,7 +176,8 @@ public class Test1 extends Application {
 		// Add a listener to our buffer so it does stuff.		
 		buffer.addListDataListener(new BufferListener(buffer, remote));
 		
-		/*String inputLine;
+		/*
+		String inputLine;
 		while (warble == 1 && (inputLine = uinput.nextLine()) != null) {
 			//read repeatedly
 			remote.remote_writer.println(inputLine); //legit I built this to run off the buffer so just. write to that
@@ -201,26 +206,22 @@ public class Test1 extends Application {
 		public void intervalAdded(ListDataEvent e) {
 			// what happens when something is added to list?
 			// peel off first item, split it
-			Vector<String> args = new Vector<String>(Arrays.asList(target.get(0).split(" ")));
-			
-			Boolean isLocal = args.get(0).equals("LOCAL");
-			if (isLocal) {
-				args.remove(0);
+
+			String message = target.get(0);
+			while (message != null) {
+				//split the string into an array, slot that array into a vector
+				System.out.println(message);
+				Vector<String> args = new Vector<String>(Arrays.asList(message.split(" ")));
+				
+				Boolean isLocal = args.get(0).equals("LOCAL");
+				if (isLocal) {
+					args.remove(0);
+				}
+				
+				message = handleInput(args, isLocal);
 			}
-
-			handleInput(args, isLocal);
-			//update_display(root, gm);
-			target.remove(0);
-			//I mean I can't imagine why we'd be getting local acknowledgements... do we need these?
+			buffer.remove(0);
 			
-			//this is bugged bc java doesn't like it when we modify the GUI outside of the GUI thread
-			//update_display(root, gm);
-			// handling of some acknowledgments should probably go here
-			// else, send them off to the game manager! woo!
-
-			// pass that string along to gm.handle_input()
-			// update_display()
-			// remove that string from gm.handle_input()
 		}
 
 		public void intervalRemoved(ListDataEvent e) {
@@ -277,7 +278,6 @@ public class Test1 extends Application {
 			//add a mouse handler to update the display ; this is a horrendous workaround I know. 
 			working.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 	        	@Override public void handle(MouseEvent event) {
-	        		System.out.println("click");
 	        		update_display(root, gm);
 	        	}
 	        });
@@ -308,80 +308,60 @@ public class Test1 extends Application {
 ////////////////////////////////////////////////////////////////////////////////////
 //Buffer input Handling
 	private String handleInput(Vector<String> args, Boolean isLocal) {
-		System.out.println(args);
+		//handle the input! A massive, sprawling if/else tree. how terrible!
 		
 		if (args.get(0).equals("WELCOME")){
-			//yeah
+			System.out.println("Server connected.");
+			return null;
 		} else if (args.get(0).equals("READY") || args.get(0).equals("OK")) {
 			//Received "READY" ack; it is now either the server's or client's turn to move.
-			gm.acknowledge = true;
 			gm.start_time = System.currentTimeMillis();
-			switch(gm.playerInputs[gm.currentPlayer]) {
-				case HUMAN : 
-					//local player: have fun, buddy :)
-					//prolly do some like. display stuff. 
-					break;
-				case REMOTESERVER :
-					//wait for server's move 
-					break;
-				case AI :
-					//notify AI to start making a move 
-					break;
-				case REMOTECLIENT : 
-					//start... timing them? I don't think we really need anything here
-					break;
-					
-			} 
-			
-		//I THINK OK and READY can be wrapped into the same, since whose turn it is is handled elsehwere 
-/*		} else if (args.get(0) == "OK") { 
-			//Received "OK" ack; it is now the other's turn. 
-*/			
-		} else if (args.get(0).equals("ILLEGAL")) {
-			
-			if (isLocal) {
-				//we've written ourselves an illegal signal. neat. 
-				// ....handle this, idk. 
-			} else if (gm.acknowledge) {
-				//the server has messed up. hee hee hoo ho
-			} else {
-				//if last move isn't acknowledged, that means we messed up. oh no! we lose
-				//prepare to lose? (do nothing...?) 
+			gm.expecting_move = true;
+			if (gm.playerInputs[gm.currentPlayer] == Source.AI) {
+				//If our AI is the current player, notify it to start doing things. 
+				//this SHOULD only come up if we receive READY and are first.
 			}
+			return null;
+			
+		} else if (args.get(0).equals("ILLEGAL")) {
+			//nothing really needs to be done with this, I think. Server should send LOSE or WIN.
+			return null;
 			
 		} else if (args.get(0).equals("TIME")) {
-			if (gm.acknowledge) {
-				//If last move was acknowledged, that means server took too long
-				//we win? carry out server's last move but then we win 
-			} else {
-				//if last move wasn't acknowledged, that means we took too long. oh no
-				
-			}
-			
+			//nothing really needs to be done with this, I think. Server should send LOSE or WIN.
+			return null;
 			
 		} else if (args.get(0).equals("LOSER")) {
 			if (isLocal) {
-				System.out.println("YOU WIN");
 				// we win! (cuz we're sending the remote a loser message 
+				remote.remote_writer.println("LOSER");
+				System.out.println("YOU WIN");
 			} else {
 				System.out.println("YOU LOSE");
 				//we lose :c
 			}
+			return null;
 			
 		} else if (args.get(0).equals("WINNER")) {
 			//end game, display winner text
 			if (isLocal) {
 				//we lose :c
+				remote.remote_writer.println("WINNER");
 				System.out.println("YOU LOSE");
 			} else {
 				//we win!
 				System.out.println("YOU WIN");
 			}
+			return null;
 			
 		} else if (args.get(0).equals("TIE")) {
 			//end game, display tie text
 			//game ended in tie 
+			if (isLocal) {
+				remote.remote_writer.println("TIE");
+			}
 			System.out.println("YOU DON'T WIN OR LOSE I GUESS");
+			return null;
 			
 		} else if (args.get(0).equals("INFO")) {
 			
@@ -400,67 +380,135 @@ public class Test1 extends Application {
 			if (args.get(5).equals("S")) {
 				//god is good. Normal configuration.
 			} else if (args.get(5).equals("R")) {
-				//god is not good. Random configuration. Initialize with the desired layout of pits.
-				
+				//god is not good. Random configuration. Initialize with the desired layout of pits.	
 			}
 			
+			gm.initialized = true;
 			//do the game setup stuff
 			//if local, write the same args to the remote
-			//if remote, configure game 
+			
+			if (isLocal) {
+				String out = "";
+				for (int i = 0; i < args.size(); i++) {out = out + args.get(i) + " ";}
+				remote.remote_writer.println(out);
+			} else {
+				//we received this from server, so we should.... initialize that stuff, huh?
+			}
+			return null;
 			
 		} else if (args.get(0).equals("P")) {
 			// pie rule
 			if (gm.moveNumber == 1) {
 				//if this is second move in game, do pie rule
 				gm.moveNumber += 1;
-				//do a pie rule!
+				gm.pieRule(); // oh I don't trust this function at all.
 			} else {
-				//return illegal
+				remote.remote_writer.println("ILLEGAL");
+				if (isLocal) {
+					return "LOCAL WINNER";
+				} else {
+					return "LOCAL LOSER";
+				}
 			}
 			
 			//if this was locally-generated, write it to the remote.
 			if (isLocal && (gm.playerInputs[gm.currentPlayer] == Source.REMOTESERVER || gm.playerInputs[1 - gm.currentPlayer]== Source.REMOTECLIENT )) {
 				remote.remote_writer.println("P");
-				gm.acknowledge = false;
+				gm.acknowledged = false;
 			}		
+			return null;
 			
 		} else if (args.get(0).matches("^[0-9]*$")) {
 			//if our first character is a number, then we do a regular ol' move.
 			String moves = "";
+			
+			gm.end_time = System.currentTimeMillis();
+			
 			for (int i = 0; i < args.size(); i++) {
 				//move will have to be adjusted for this to work: make the error code actually work
 				try {
-					int result = gm.move(Integer.parseInt(args.get(i)),  gm.currentPlayer); //do that move until there are no moves remaining
-					if (result == 0 || result == 1) {
-						//return a player, move successful; this should also make subsequent moves from the same input return illegal
-						gm.currentPlayer = result;
-						moves = moves + " " + Integer.parseInt(args.get(i));
-						
-						//need somethign to handle *who* wins in these situations
-					} else if (result == 2) {
-						//send ourselves an illegal signal.
-						return "LOCAL ILLEGAL";
+					int choice = Integer.parseInt(args.get(i));
+					int result = gm.move(choice, gm.currentPlayer); //do that move until there are no moves remaining
+					moves = moves + " " + args.get(i);
 					
+					if ((result == 2 || gm.illegal_flag) || (!isLocal && gm.expecting_move)) {
+						//if that's an illegal move, OR we weren't expecting a remote input, return illegal.
+						gm.illegal_flag = true;
+					
+					} else if ( result == 0 || result == 1) {
+						//return a player, move successful; this should also make subsequent moves from the same input return illegal
+						if (gm.currentPlayer != result) {
+							gm.expecting_move = false;
+							gm.currentPlayer = result;
+						}
+						 
 					} else if (result == 3 ) {
 						//player 0 has won 
 						return "LOCAL WINNER";
 					} else if (result == 4 ) {
 						return "LOCAL LOSER";
 					} else if (result == 5 ) {
-						buffer.addElement("LOCAL TIE");
+						return "LOCAL TIE";
 					}
 				} catch (NumberFormatException e) {
 					//this ain't a number........ stop that....
 				}
 			}
 			
+			gm.moveNumber += 1;
 			moves = moves.substring(1); //remove starting space
-			//if we locally-generated this move, write it to the remote. 
 			//if (isLocal && (gm.playerInputs[gm.currentPlayer] == Source.REMOTESERVER || gm.playerInputs[1 - gm.currentPlayer]== Source.REMOTECLIENT )) {
-			if (isLocal) {	//if the other player is remote, write to remote.
-				remote.remote_writer.println(moves);
-				gm.acknowledge = false;
-			}		
+			
+			long time_elapsed = gm.end_time - gm.start_time;
+			gm.end_time = 0;
+		
+			gm.start_time = System.currentTimeMillis();
+			if (config == Config.SERVER) {
+				if (isLocal) {
+					//Move from us. Scrutinize, send to client.
+					if (gm.illegal_flag) {
+						remote.remote_writer.println(moves);
+						remote.remote_writer.println("ILLEGAL");
+						return "LOCAL WINNER";
+					} else if (time_elapsed > gm.timeLimit && gm.timeLimit != 0) {
+						remote.remote_writer.println("TIME");
+						remote.remote_writer.println(moves);
+						return "LOCAL WINNER";
+					} else {
+						//move went fine. yay. pass it off to client.
+						remote.remote_writer.println(moves);
+					}
+				
+				} else {
+					//move from client. scrutinize, then move on.
+					if (gm.illegal_flag) {
+						remote.remote_writer.println("ILLEGAL");
+						return "LOCAL LOSER";
+					} else if (time_elapsed > gm.timeLimit && gm.timeLimit != 0) {
+						remote.remote_writer.println("TIME");
+						return "LOCAL LOSER"; 
+					} else {
+						remote.remote_writer.println("OK");
+					}
+				}
+			}
+			
+			if (config == Config.CLIENT) {
+				if (isLocal) {
+					//Send our move out to the server.
+					remote.remote_writer.println(moves);
+				} else {
+					//notify our AI to start its next move, otherwise nothing.
+					remote.remote_writer.println("OK");
+				}
+			}
+			
+			if (gm.playerInputs[gm.currentPlayer] == Source.AI) {
+				//if the current player is our AI, signal the AI to move.
+			}
+			
+			return null;
+			
 			
 			//manually call the mouse click event on one of the pits
 			//this is the worst possible way to trigger an event in another thread, sh.
@@ -468,9 +516,9 @@ public class Test1 extends Application {
 			//		   stores.get(0).getCenterX(), stores.get(0).getCenterY(), stores.get(0).getCenterX(), stores.get(0).getCenterY(),
 			//		   MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
 		} else {
+			return null;
 			//return "Failed to handle input ;;;;";
 		}
-		return ""; //if nothing else, return empty string.
 		//return "This should never show up";
 	}
 }

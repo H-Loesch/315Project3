@@ -18,8 +18,6 @@ public class Remote implements Runnable {
 	private Socket remoteSocket;
 	private ServerSocket listenSocket;
 	Config config; //client or server
-	String in; //these two variables will be used to bastardize giving thread-pool input
-	String in2;  //believe me, I'm extremely ashamed.
 
 	Remote(DefaultListModel<String> _buffer, int _port) {
 		//initialize as server
@@ -54,11 +52,11 @@ public class Remote implements Runnable {
 				remoteSocket = listenSocket.accept();
 				remote_writer = new PrintWriter(remoteSocket.getOutputStream(), true);
 				remote_reader = new BufferedReader( new InputStreamReader(remoteSocket.getInputStream()));
+				remote_writer.println("WELCOME");
 				System.out.println("Client Connected.");
 			} else {
 				remote_writer = new PrintWriter(remoteSocket.getOutputStream(), true);
 				remote_reader = new BufferedReader( new InputStreamReader(remoteSocket.getInputStream()));
-				System.out.println("Server Connected.");
 			}
 		} catch (IOException e) {
 			System.out.println("remote creation failed.");
@@ -67,19 +65,18 @@ public class Remote implements Runnable {
 		String inputLine;
 		try {
 			while ((inputLine = remote_reader.readLine()) != null) {
-				//read repeatedly
-				if (inputLine.equals("close")) {
-					break;
-				}
+				//read repeatedly, until the remote socket is closed or returns null.
+	
 				buffer.addElement(inputLine); //legit I built this to run off the buffer so just. write to that
-			
+				if ((inputLine.equals("WINNER") || inputLine.equals("LOSER") || inputLine.equals("TIE"))) {
+					//we are client, have received final message from server.
+					remoteSocket.close();
+				}
 			}
-			
-			System.out.println("exiting reading while loop");
-		
+			listenSocket.close();
+			System.out.println("Remote connection closed.");
 		} catch (IOException e) {
-			System.out.println("Server reading has broken.");
-			//idk dude. try not breaking things sometimes?
+			System.out.println("Remote connection closed.");
 		}
 		
 	}

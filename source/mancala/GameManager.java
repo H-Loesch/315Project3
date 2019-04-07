@@ -6,23 +6,25 @@ import java.util.Scanner;
 
 public class GameManager {
 
-	public int[] board;
+	int[] board;
 	
-	public int currentPlayer = 0; // whose turn is it right now?
-	public int localPlayer = 0; //which player is local? (it can also be both of them so whatever)
+	int currentPlayer = 0; // whose turn is it right now?
+	int localPlayer = 0; //which player is local? (it can also be both of them so whatever)
 
-	public int winner = 0;
+	int winner = 0;
 	Scanner scanner = new Scanner(System.in);
-	public int numPits = 6; //number of pits on each side of the board
-	public int numPieces = 4; //average number of pieces / pit
-	public long timeLimit = 5000; //time in milliseconds for each player to make a move 
-	public int moveNumber; //home many moves have been made this game.
+	int numPits = 6; //number of pits on each side of the board
+	int numPieces = 4; //average number of pieces / pit
+	long timeLimit = 0; //time in milliseconds for each player to make a move 
+	int moveNumber; //home many moves have been made this game.
 	Source playerInputs[] = {Source.HUMAN, Source.HUMAN}; //Will contain our tw o players' sources. Defaults to 2-player local
 	
-	public long start_time; //time acknowledgement is received
-	public long end_time;  //time move is received 
-	
-	Boolean acknowledge = false; //have we received an OK for the latest move
+	long start_time; //time acknowledgement is received
+	long end_time;  //time move is received 
+	Boolean initialized = false;
+	Boolean expecting_move = true; //are we currently expecting a move from someone?
+	Boolean illegal_flag = false;
+	Boolean acknowledged = false; //have we received an OK for the latest move
 	void randomPieces() {  //used to create a random distribution of pieces, uses numPieces for average number
 
 		Random rnd = new Random();
