@@ -364,9 +364,14 @@ public class Test1 extends Application {
 			if (gm.moveNumber == 1) {
 				//if this is second move in game, do pie rule
 				gm.moveNumber += 1;
-				//do a pie rule!
+				gm.pieRule(); // oh I don't trust this function at all.
 			} else {
-				//return illegal
+				remote.remote_writer.println("ILLEGAL");
+				if (isLocal) {
+					return "LOCAL WINNER";
+				} else {
+					return "LOCAL LOSER";
+				}
 			}
 			
 			//if this was locally-generated, write it to the remote.
