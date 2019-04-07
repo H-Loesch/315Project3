@@ -100,7 +100,7 @@ public class Test1 extends Application {
 	    //create button control
 	    //Button scrabbleButton  = new Button("Scrabble");
 	    Button pvpButton = new Button("Play PvP");
-		
+		Button pvcButton = new Button("Play a Computer");
 		
 		
 	    
@@ -177,7 +177,7 @@ public class Test1 extends Application {
 			//read repeatedly
 			remote.remote_writer.println(inputLine); //legit I built this to run off the buffer so just. write to that
 		
-		}*/
+		}
 		
 	}
 	*/
@@ -509,9 +509,24 @@ class testHandle implements EventHandler<ActionEvent>{
 	
 	@Override
 	public void handle(ActionEvent event) {
-
-		
-		
+		/*
+		Button cardDealButton  = new Button("Deal");
+	    
+	    TextField dealNum = new TextField();
+	    dealNum.setPromptText("How many cards do you want?");
+	    
+	    //cardLabel = new Label();
+	    
+	    //cardDealButton.setOnAction(new cardDealButtonHandler());
+	    
+	    VBox  cardBox = new VBox(10, dealNum, cardDealButton);
+	    //cardLabel.setText("Select an Option");
+	    Scene cardScene = new Scene(cardBox, 300, 300);
+	    cardBox.setAlignment(Pos.CENTER);
+	    Stage cardStage = new Stage();
+	    cardStage.setScene(cardScene);	    	
+	    cardStage.show();
+		*/
 		System.out.println("You did it XD XD XD");
 		
 
