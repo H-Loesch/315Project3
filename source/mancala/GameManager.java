@@ -179,8 +179,8 @@ public class GameManager {
 					if(board[move] == 1) { //empty pit
 						int opposite = (2*numPits)+2 - move;
 						System.out.println("Won pit: " + opposite);
-						marblesWon = board[(2*numPits)+2 - move] + 1; //opposing pit plus capturing marble
-						board[(2*numPits)+2-move] = 0;				//set gathered pit's marble to 0
+						marblesWon = board[opposite] + 1; //opposing pit plus capturing marble
+						board[opposite] = 0;				//set gathered pit's marble to 0
 						board[move] = 0;
 						board[0] += marblesWon;   		//adds marbles won to player's kala
 					}

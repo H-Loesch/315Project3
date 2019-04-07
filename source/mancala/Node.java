@@ -37,7 +37,7 @@ public class Node {
 
 	GameManager nextGame(int move) {
 		GameManager child = root;
-		child.move(move, player, null);
+		child.move(move, player);
 		return child;
 	}
 }
