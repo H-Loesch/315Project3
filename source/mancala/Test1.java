@@ -621,6 +621,14 @@ public class Test1 extends Application {
 				//move will have to be adjusted for this to work: make the error code actually work
 				try {
 					int choice = Integer.parseInt(args.get(i));
+					if(gm.currentPlayer==0) { //player 1
+						//do nothing, correct value is set
+					}
+					else { //player 2
+						//move choice to player 2s side of board
+						choice = choice + gm.numPits + 1;
+					}
+					
 					int result = gm.move(choice, gm.currentPlayer); //do that move until there are no moves remaining
 					moves = moves + " " + args.get(i);
 
