@@ -379,26 +379,26 @@ public class Test1 extends Application {
 		} else if (args.get(0).matches("^[0-9]*$")) {
 			//if our first character is a number, then we do a regular ol' move.
 			String moves = "";
-			if (!gm.expecting_move && !isLocal) {
-				//we weren't expecting a move... what's going on here? 
-				System.out.println("Unexpected move received.");
-				return null;
-			}
 			
 			gm.end_time = System.currentTimeMillis();
 			
 			for (int i = 0; i < args.size(); i++) {
 				//move will have to be adjusted for this to work: make the error code actually work
 				try {
-					int result = gm.move(Integer.parseInt(args.get(i)),  gm.currentPlayer); //do that move until there are no moves remaining
+					int choice = Integer.parseInt(args.get(i));
+					int result = gm.move(choice, gm.currentPlayer); //do that move until there are no moves remaining
 					moves = moves + " " + args.get(i);
-					if (result == 2 || gm.illegal_flag) {
-						//send ourselves an illegal signal.
+					
+					if ((result == 2 || gm.illegal_flag) || (!isLocal && gm.expecting_move)) {
+						//if that's an illegal move, OR we weren't expecting a remote input, return illegal.
 						gm.illegal_flag = true;
-						
+					
 					} else if ( result == 0 || result == 1) {
 						//return a player, move successful; this should also make subsequent moves from the same input return illegal
-						gm.currentPlayer = result;
+						if (gm.currentPlayer != result) {
+							gm.expecting_move = false;
+							gm.currentPlayer = result;
+						}
 						 
 					} else if (result == 3 ) {
 						//player 0 has won 
