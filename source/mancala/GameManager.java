@@ -110,8 +110,10 @@ public class GameManager {
 			if(move != 0) {
 				if(move < size/2) {  //on your side
 					if(board[move] == 1) { //empty pit its equal to one because you placed a stone in an empty pit)
-						marblesWon = board[size - move] + 1; //opposing pit plus capturing marble
-						board[size-move] = 0;				//set gathered pit's marble to 0
+						int opposite = size - move;
+						System.out.println("Won pit: " + opposite);
+						marblesWon = board[opposite] + 1; //opposing pit plus capturing marble
+						board[opposite] = 0;				//set gathered pit's marble to 0
 						board[move] = 0;
 						board[0] += marblesWon;   		//adds marbles won to player's kala
 					}
@@ -120,7 +122,7 @@ public class GameManager {
 				player = 1;		//other player's turn
 			}
 			else if(move == 0){ //landed in kala, go again
-		
+				System.out.println("go again");
 			}
 		}
  		//AI's move
@@ -132,18 +134,21 @@ public class GameManager {
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
 			}
-			if(move > size/2) {  //on your side
-				if(board[move] == 1) { //empty pit (its equal to one because you placed a stone in an empty pit)
-					int opposite = size - move;
-					marblesWon = board[opposite] + 1; //opposing pit plus capturing marble
-					board[opposite] = 0;				//set gathered pit's marble to 0
-					board[move] = 0;
-					board[size/2] += marblesWon;   		//adds marbles won to player's kala
-					}
+			if(move != size/2) {  //not in kala
+				if(move > size/2) {
+					if(board[move] == 1) { //empty pit (its equal to one because you placed a stone in an empty pit)
+						int opposite = size - move;
+						System.out.println("Won pit: " + opposite);
+						marblesWon = board[opposite] + 1; //opposing pit plus capturing marble
+						board[opposite] = 0;				//set gathered pit's marble to 0
+						board[move] = 0;
+						board[size/2] += marblesWon;   		//adds marbles won to player's kala
+						}
+				}
 				player = 0; //other player's turn
 			}
 			else if(move == size/2) { //landed in kala, go again
-		
+				System.out.println("go again");
 			}
 		}
  		if(!playerHasStones() || !computerHasStones()) {
@@ -241,7 +246,7 @@ public class GameManager {
 		}
 		if(!playerHasStones) {
 			for(int i = size/2 + 1; i < size; i++) {
-				board[7] += board[i];
+				board[size/2] += board[i];
 				board[i] = 0;
 			}
 		}
@@ -266,7 +271,7 @@ public class GameManager {
 	
 	boolean winner() { //0 player 1 AI
 		System.out.println("Player 1's score: " + board[0]);
-		System.out.println("AI's score: " + board[7]);
+		System.out.println("AI's score: " + board[size/2]);
 		return (board[size/2] > board[0]);
 	}
 	
