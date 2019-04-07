@@ -18,7 +18,11 @@ import javafx.event.EventHandler;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.Scene;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -27,8 +31,12 @@ import javafx.stage.Stage;
 
 import javafx.scene.layout.VBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Button;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.event.ActionEvent;
 
@@ -57,19 +65,16 @@ public class Test1 extends Application {
 
 	public int numPits = 4; // is this still needed?
 	public int numPieces = 6;
-	private static Random key = new Random();
 	Config config; //are we client or server?
-
-
+	public Integer local_players = 1;
+	private Stage root; 
+	
 	private GameManager gm = new GameManager(numPits, numPieces);
-	Pane root = new Pane(); // root pane
+	Pane game_pane = new Pane(); // root pane
 	Pane centerPiece = new Pane(); // the gameboard itself will be stored here
 
 	private DefaultListModel<String> buffer = new DefaultListModel<String>();
-
-
-	static Integer configType = 0;	//remote threads
-
+	
 	Remote remote;
 	ExecutorService pool = Executors.newFixedThreadPool(1);
 
@@ -78,63 +83,150 @@ public class Test1 extends Application {
 
 	public static void main(String[] args) {
 		launch(args);
+		System.out.println("honk");
 	}
-
-	@Override
-
-	  public void start(Stage primaryStage){
-
+	
+	public void start(Stage primaryStage){
+	    
+		    //show the window
+		root = primaryStage;
+		root.show();
 		// Set the stage title
-	    primaryStage.setTitle("Mancala!");
+		root.setTitle("Mancala!");
+		
+		//create button control
+		//Button scrabbleButton  = new Button("Scrabble");
+		Button local_button = new Button("Play locally");
+		Button remote_server_button = new Button("Connect to a client player.");
+		Button remote_client_button = new Button("Connect to a server player.");
+		
+		//put the label and button in a VBox with 10 pixels of spacing.
+		//VBox  vbox = new VBox(10, messageLabel, scrabbleButton, clueButton, cardButton, bankButton, valueLabel);
+		VBox opener_one_vbox = new VBox(10, local_button, remote_server_button, remote_client_button);
+		opener_one_vbox.setStyle("-fx-background-color: burlywood;");
+		
+		opener_one_vbox.setAlignment(Pos.CENTER);
 
+		// create a Scene with the VBox as its root node
+		// set the size of the scene (without this it is only as big as the label)
+		Scene opener_one = new Scene(opener_one_vbox, 720, 720, Color.BURLYWOOD);
+		root.setScene(opener_one);
+		
 
-	    //create inputs
-	    TextField setPits = new TextField();
-	    TextField setPieces = new TextField();
+		local_button.setOnAction(new EventHandler<ActionEvent>() {
+	 	    @Override public void handle(ActionEvent e) {
+				config = Config.LOCAL;
+				
+				GridPane opener_2_grid = createGrid();
+				
+				//create 1st set of radio buttons
+				final ToggleGroup player1 = createRadioButtons(opener_2_grid, "Human", "Computer", "Player 1", 0);
+				final ToggleGroup player2 = createRadioButtons(opener_2_grid, "Human", "Computer", "Player 2", 2);
+											
+				TextField pit_number_field = createNumPitField(opener_2_grid, 4);
+				TextField piece_number_field = createNumPieceField(opener_2_grid, 5);
+				TextField time_limit_field = createTimeLimitField(opener_2_grid, 6);
+				
+				final ToggleGroup distribution = createRadioButtons(opener_2_grid, "Random", "Standard", "Distribution of pieces", 7);
+				final ToggleGroup first = createRadioButtons(opener_2_grid, "Player 1", "Player 2", "Who goes first?", 9);
+				Button play_button = new Button("Play mancala!!");
+				GridPane.setConstraints(play_button, 1, 11, 1, 1);
+				
+				opener_2_grid.getChildren().addAll(play_button);
+				
+				//putting in a VBox AND HBox bc that's the easiest way I could think of to center things.
+				VBox opener_two_vbox = new VBox(20, opener_2_grid);
+				opener_two_vbox.setAlignment(Pos.CENTER);
+				HBox opener_two_hbox = new HBox(20, opener_two_vbox);
+				opener_two_hbox.setAlignment(Pos.CENTER);
+				opener_two_hbox.setStyle("-fx-background-color: burlywood;");
+				
+				Scene opener_2 = new Scene(opener_two_hbox, 720, 720, Color.BURLYWOOD);
+				root.setScene(opener_2);
 
-	    // create a label control
-	    //Label messageLabel = new Label("Virtual Game.");
-	    //valueLabel = new Label("Go ahead, Click!");
-	    Label pitsMessage = new Label("How many pits do you want on each side? (4-9)");
-	    Label piecesMessage = new Label("How many pieces do you want on each side? (1-10) (set negative for random distributon)");
-
-
-	    //create button control
-	    //Button scrabbleButton  = new Button("Scrabble");
-	    Button pvpButton = new Button("Play PvP");
-		Button pvcButton = new Button("Play a Computer");
-
-
-
-	    // Register the event Handler
-	    //scrabbleButton.setOnAction(new ScrabbleButtonHandler());
-	    pvpButton.setOnAction(new pvpButtonHandler());
-
-
-
-	    //put the label and button in a VBox with 10 pixels of spacing.
-	    //VBox  vbox = new VBox(10, messageLabel, scrabbleButton, clueButton, cardButton, bankButton, valueLabel);
-		VBox vbox = new VBox(10, pitsMessage,setPits,piecesMessage,setPieces,pvpButton);
-		vbox.setStyle("-fx-background-color: burlywood;");
-
-	    // create a Scene with the HBox as its root node
-	    // set the size of the scene (without this it is only as big as the label)
-	    Scene scene = new Scene(vbox, 720, 720, Color.BURLYWOOD);
-
-
-	    // center the Label
-	    vbox.setAlignment(Pos.CENTER);
-
-
-
-	    // Add the scene to the Stage
-	    primaryStage.setScene(scene);
-
-
-
-	    //show the window
-	    primaryStage.show();
-
+				play_button.setOnAction(new EventHandler<ActionEvent>() {
+			 	    @Override public void handle(ActionEvent e) {
+			 	    	String message = "LOCAL INFO ";
+			 	    	//grab numPits, numPieces, and time limits from the input fields. If they're not numbers, then don't bother.
+			 	    	if (pit_number_field.getText().matches("\\d*")) {
+			 	    		int val = Integer.parseInt(pit_number_field.getText());
+			 	    		if (val > 3 && val < 10) {
+			 	    			message = message + val + " ";
+			 	    		} else {return;}
+			 	    	} else {return;}
+			 	    	if (piece_number_field.getText().matches("\\d*")) {
+			 	    		int val = Integer.parseInt(piece_number_field.getText());
+			 	    		if (val > 0 && val < 11) {
+			 	    			message = message + val + " ";
+			 	    		} else {return;}
+			 	    	} else {return;}
+			 	    	if (time_limit_field.getText().matches("\\d*")) {
+			 	    		long val = Long.parseLong(time_limit_field.getText());
+			 	    		message = message + val + " ";
+			 	    	} else {return;}
+			 	    	
+			 	    	//radio button handling. Jesus christ why are these so terrible.
+			 	    	if (((RadioButton) player1.getSelectedToggle()) == null) {
+			 	    		return;
+			 	    	} else if (((RadioButton) player1.getSelectedToggle()).getText().equals("Human")) {
+			 	    		gm.playerInputs[0] = Source.HUMAN;
+			 	    	} else if (((RadioButton) player1.getSelectedToggle()).getText().equals("Computer")) {			
+			 	    		gm.playerInputs[0] = Source.AI;
+			 	    	}
+			 	    	
+						if (((RadioButton) player2.getSelectedToggle()) == null) {
+							return;
+						} else if (((RadioButton) player2.getSelectedToggle()).getText().equals("Human")) {
+							gm.playerInputs[1] = Source.HUMAN;
+						} else if (((RadioButton) player2.getSelectedToggle()).getText().equals("Computer")) {
+							gm.playerInputs[1] = Source.AI;
+						}
+						
+						if (((RadioButton) first.getSelectedToggle()) == null) {
+							return;
+						} else if (((RadioButton) first.getSelectedToggle()).getText().equals("Player 1")) {
+							message = message + "S "; //whoever's receiving this goes second
+						} else if (((RadioButton) first.getSelectedToggle()).getText().equals("Player 2")) {
+							message = message + "F "; //whoever's receiving this goes first
+						}
+						
+						if (((RadioButton) distribution.getSelectedToggle()) == null) {
+							return;
+						} else if (((RadioButton) distribution.getSelectedToggle()).getText().equals("Random")) {
+							message = message + "R"; //random distribution (we'll let buffer handler actually make this part of the message)
+						} else if (((RadioButton) distribution.getSelectedToggle()).getText().equals("Standard")) {
+							message = message + "S"; //Standard distribution
+						}
+			 	    	
+						System.out.println(message);
+			 	    	//now get stuff from our radio buttons
+			 	    	//if (player1.getSelectedToggle().toString())
+			 	    }
+				});
+			}
+		});
+		
+		remote_client_button.setOnAction(new EventHandler<ActionEvent>() {
+			@Override public void handle(ActionEvent e) {
+				local_players = 1;
+				config = Config.CLIENT;
+				//root.setScene();
+				//run the other thing
+			}
+		});
+		
+		remote_server_button.setOnAction(new EventHandler<ActionEvent>() {
+			@Override public void handle(ActionEvent e) {
+				local_players = 1;
+				config = Config.SERVER;
+			}
+		});
+		
+		
+		// center the Label
+		
+		
+		
 
 	  } //end start
 	/*
@@ -182,7 +274,7 @@ public class Test1 extends Application {
 
 		}*/
 
-	}
+	
 	
 	////////////////////////////////////////////////////////////////////////////////////////////
 	//Buffer listener
@@ -218,7 +310,7 @@ public class Test1 extends Application {
 
 				message = handleInput(args, isLocal);
 			}
-			buffer.remove(0);
+			target.remove(0);
 
 		}
 
@@ -519,64 +611,118 @@ public class Test1 extends Application {
 		}
 		//return "This should never show up";
 	}
-}
 
 
-
-class pvpButtonHandler implements EventHandler<ActionEvent>{
-
-	@Override
-	public void handle(ActionEvent event) {
-		//Test1.configType = 2;
-		//Test1.numPits = Integer.parseInt(Test1.setPits.getText());
-		Button testButton = new Button("Try Me");
-		testButton.setOnAction(new testHandle());
-
-		VBox test = new VBox(10,testButton);
-		test.setStyle("-fx-background-color: burlywood;");
-
-		Scene testScene = new Scene(test,720,720);
-		Stage testStage = new Stage();
-		testStage.setScene(testScene);
-		testStage.show();
-
-
-
-
-		System.out.println("You did it");
-
+	class pvpButtonHandler implements EventHandler<ActionEvent>{
+	
+		@Override
+		public void handle(ActionEvent event) {
+			//Test1.configType = 2;
+			//Test1.numPits = Integer.parseInt(Test1.setPits.getText());
+			Button testButton = new Button("Try Me");
+			testButton.setOnAction(new testHandle());
+	
+			VBox test = new VBox(10,testButton);
+			test.setStyle("-fx-background-color: burlywood;");
+	
+			Scene testScene = new Scene(test,720,720);
+			Stage testStage = new Stage();
+			testStage.setScene(testScene);
+			testStage.show();
+	
+	
+	
+	
+			System.out.println("You did it");
+	
+		}
+	
+	
 	}
-
-
-}
-
-
-class testHandle implements EventHandler<ActionEvent>{
-
-	@Override
-	public void handle(ActionEvent event) {
-		/*
-		Button cardDealButton  = new Button("Deal");
-
-	    TextField dealNum = new TextField();
-	    dealNum.setPromptText("How many cards do you want?");
-
-	    //cardLabel = new Label();
-
-	    //cardDealButton.setOnAction(new cardDealButtonHandler());
-
-	    VBox  cardBox = new VBox(10, dealNum, cardDealButton);
-	    //cardLabel.setText("Select an Option");
-	    Scene cardScene = new Scene(cardBox, 300, 300);
-	    cardBox.setAlignment(Pos.CENTER);
-	    Stage cardStage = new Stage();
-	    cardStage.setScene(cardScene);
-	    cardStage.show();
-		*/
-		System.out.println("You did it XD XD XD");
-
-
+	
+	
+	class testHandle implements EventHandler<ActionEvent>{
+	
+		@Override
+		public void handle(ActionEvent event) {
+			/*
+			Button cardDealButton  = new Button("Deal");
+	
+		    TextField dealNum = new TextField();
+		    dealNum.setPromptText("How many cards do you want?");
+	
+		    //cardLabel = new Label();
+	
+		    //cardDealButton.setOnAction(new cardDealButtonHandler());
+	
+		    VBox  cardBox = new VBox(10, dealNum, cardDealButton);
+		    //cardLabel.setText("Select an Option");
+		    Scene cardScene = new Scene(cardBox, 300, 300);
+		    cardBox.setAlignment(Pos.CENTER);
+		    Stage cardStage = new Stage();
+		    cardStage.setScene(cardScene);
+		    cardStage.show();
+			*/
+			System.out.println("You did it XD XD XD");
+	
+	
+		}
+	
+	
 	}
-
+	
+	
+////////////////////////////////////////////////////////////////////////////////
+//GUI setup functions, cuz jesus it's ugly without these 
+	private ToggleGroup createRadioButtons(GridPane pane, String name1, String name2, String label, int start) {
+		ToggleGroup group = new ToggleGroup();
+		RadioButton choice1 = new RadioButton(name1);
+		RadioButton choice2 = new RadioButton(name2);
+		Text choiceText = new Text(label);
+		choice1.setToggleGroup(group);
+		choice2.setToggleGroup(group);
+		GridPane.setConstraints(choice1, 1, start); //
+		GridPane.setConstraints(choice2, 2, start);
+		GridPane.setConstraints(choiceText, 0, start, 1, 1);
+		
+		pane.getChildren().addAll(choice1, choice2, choiceText);
+		return group;
+	}
+	
+	private GridPane createGrid() {
+		GridPane grid = new GridPane();
+		grid.setPadding(new Insets(20, 20, 20, 20)); //idk what this does
+		grid.setVgap(10); //gap of 10 between things
+		grid.setHgap(10);
+	    grid.setPrefSize(300, 300);
+	    grid.getColumnConstraints().add(new ColumnConstraints(120)); 
+	    grid.getColumnConstraints().add(new ColumnConstraints(100)); 
+	    grid.getColumnConstraints().add(new ColumnConstraints(100)); 
+		return grid;
+	}
+	
+	private TextField createNumPitField(GridPane grid, int start) {
+		final TextField pit_number_field = new TextField();
+		pit_number_field.setPromptText("# of pits on each side");
+		GridPane.setConstraints(pit_number_field, 0, start, 2, 1);
+		grid.getChildren().add(pit_number_field);
+		return pit_number_field;
+	}
+	
+	private TextField createNumPieceField(GridPane grid, int start) {
+		final TextField piece_number_field = new TextField();
+		piece_number_field.setPromptText("Average # of pieces in pits");
+		GridPane.setConstraints(piece_number_field, 0, start, 2, 1);
+		grid.getChildren().add(piece_number_field);
+		return piece_number_field;
+	}
+	
+	TextField createTimeLimitField(GridPane grid, int start) {
+		final TextField time_limit_field = new TextField(); 
+		time_limit_field.setPromptText("Time limit / move ; 0 -> no limit");
+		GridPane.setConstraints(time_limit_field,  0,  start,  2,  1);
+		grid.getChildren().add(time_limit_field);
+		return time_limit_field;
+	}
 
 }
