@@ -25,6 +25,8 @@ public class GameManager {
 	Boolean expecting_move = true; //are we currently expecting a move from someone?
 	Boolean illegal_flag = false;
 	Boolean acknowledged = false; //have we received an OK for the latest move
+	
+	//randomizes the existing board: does NOT create a new board, so if u've changed numPits or anything things'll be changed!
 	void randomPieces() {  //used to create a random distribution of pieces, uses numPieces for average number
 
 		Random rnd = new Random();
@@ -38,8 +40,8 @@ public class GameManager {
 			distro[Math.abs(rnd.nextInt()%numPits)]++;
 		}
 		for(int j = 0; j < numPits; j++) {
-			board[j+1]=distro[j];
-			board[j+2+numPits]=distro[j];
+			board[j]=distro[j];
+			board[j+1+numPits]=distro[j];
 		}
 		
 	}
@@ -107,8 +109,6 @@ public class GameManager {
 		//check game over state
 		if(!playerHasStones() || !computerHasStones()) {
 			findWinner();								//game over calculate winner
-
-
 
 		}
 
