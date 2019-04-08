@@ -97,10 +97,6 @@ public class GameManager {
 			board[i+numPits+1] = temp;
 		}
 		
-		//swap the player of all the pits. idk maybe that will help things. amybe it won't. who knows.
-		for (Pit change_pit : pits) {
-			change_pit.player = 1 - change_pit.player;
-		}
 	}
 	
 	
@@ -140,8 +136,8 @@ public class GameManager {
 		if(selection==0 || selection == numPits+1) { //illegal move (stores)
 			legalMove = false;
 		}
-		if(player == 0) {
-			if(selection >= numPits+1) { //illegal move for player
+		if(player == 1) {
+			if(selection >= numPits+2) { //illegal move for player
 				legalMove = false;
 			}
 		}
@@ -174,7 +170,7 @@ public class GameManager {
 		if(player == 0) {
 			while(grabbed > 0) { //while marbles left
 				move += 1; //place in next pit
-				if(move == numPits+1) {
+				if(move == player * numPits + 1) {
 					move += 1;			//skip AI's kala
 				}
 				if(move > ((2*numPits)+2)-1)  				//start over
@@ -190,7 +186,7 @@ public class GameManager {
 			}
 			
 			else {
-				if(move < numPits+1) {  //on your side
+				if(move > numPits + 2) {  //on your side
 					if(board[move] == 1) { //empty pit
 						int opposite = (2*numPits)+2 - move;
 						System.out.println("Won pit: " + opposite);
@@ -207,7 +203,7 @@ public class GameManager {
 		else {
 			while(grabbed > 0) { //while marbles left
 				move += 1;
-				if(move > ((2*numPits)+2)-1)  				//only move on your side
+				if(move >= ((2*numPits)+2) || move == 0)  				//only move on your side
 					move = 1;				//skip player's kala
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
@@ -218,7 +214,7 @@ public class GameManager {
 				return 1;
 			}
 			else {
-				if(move > numPits+1) {  //on your side
+				if(move < numPits+2) {  //on your side
 					if(board[move] == 1) { //empty pit
 						int opposite = (2*numPits)+2 - move;
 						System.out.println("Won pit: " + opposite);

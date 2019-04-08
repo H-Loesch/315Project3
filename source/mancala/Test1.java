@@ -31,6 +31,7 @@ import javafx.stage.Stage;
 
 import javafx.scene.layout.VBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Labeled;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
@@ -70,9 +71,7 @@ public class Test1 extends Application {
 	private Stage root; 
 	
 	private GameManager gm = new GameManager(numPits, numPieces);
-	Pane game_pane = new Pane(); // root pane
-	Pane centerPiece = new Pane(); // the gameboard itself will be stored here
-
+	Pane game_pane; // root pane
 	private DefaultListModel<String> buffer = new DefaultListModel<String>();
 	
 	Remote remote;
@@ -98,8 +97,8 @@ public class Test1 extends Application {
 		//create button control
 		//Button scrabbleButton  = new Button("Scrabble");
 		Button local_button = new Button("Play locally");
-		Button remote_server_button = new Button("Connect to a client player.");
-		Button remote_client_button = new Button("Connect to a server player.");
+		Button remote_server_button = new Button("Connect to another player as a server.");
+		Button remote_client_button = new Button("Connect to another player as a client.");
 		
 		//put the label and button in a VBox with 10 pixels of spacing.
 		//VBox  vbox = new VBox(10, messageLabel, scrabbleButton, clueButton, cardButton, bankButton, valueLabel);
@@ -186,9 +185,9 @@ public class Test1 extends Application {
 						if (((RadioButton) first.getSelectedToggle()) == null) {
 							return;
 						} else if (((RadioButton) first.getSelectedToggle()).getText().equals("Player 1")) {
-							message = message + "S "; //whoever's receiving this goes second
-						} else if (((RadioButton) first.getSelectedToggle()).getText().equals("Player 2")) {
-							message = message + "F "; //whoever's receiving this goes first
+							message = message + "F "; //whoever's receiving this goes second
+						} else if (((RadioButton) first.getSelectedToggle()).getText().equals("Player 0")) {
+							message = message + "S "; //whoever's receiving this goes first
 						}
 						
 						if (((RadioButton) distribution.getSelectedToggle()) == null) {
@@ -237,11 +236,11 @@ public class Test1 extends Application {
 				//then wait for that remote socket to be accepted.
 				//root.setScene();
 				//run the other thing
-			
+				
 			
 				play_button.setOnAction(new EventHandler<ActionEvent>() {
 					@Override public void handle(ActionEvent e) {
-						if (((RadioButton) player2.getSelectedToggle()) == null) {
+						/*if (((RadioButton) player2.getSelectedToggle()) == null) {
 							return;
 						} else if (((RadioButton) player2.getSelectedToggle()).getText().equals("Human")) {
 							gm.playerInputs[1] = Source.HUMAN;
@@ -266,6 +265,21 @@ public class Test1 extends Application {
 			 	    			//just... don't do anything. If this breaks probably everything else is too.
 			 	    		}
 			 	    	} else {return;}
+			 	    	*/
+						gm.playerInputs[1] = Source.HUMAN;
+						int port = 80;
+						String hostname = "TAMU-MACHINE-13";
+		 	    		remote = new Remote(buffer, port, hostname);
+						try {
+		 	    			//we SHOULD be in the GUI thread when this runs. meaning that 
+		 	    			pool.execute(remote);
+		 	    			Thread.sleep(2000); //wait two seconds.
+		 	    			initializeGUI();
+		 	    			
+		 	    		} catch (InterruptedException ie) {
+		 	    			//...huh. I wonder why that didn't work...?
+		 	    			//just... don't do anything. If this breaks probably everything else is too.
+		 	    		}
 					}
 				});
 			}
@@ -304,7 +318,7 @@ public class Test1 extends Application {
 				
 				play_button.setOnAction(new EventHandler<ActionEvent>() {
 			 	    @Override public void handle(ActionEvent e) {
-			 	    	String message = "LOCAL INFO ";
+			 	    	/*String message = "LOCAL INFO ";
 			 	    	//grab numPits, numPieces, and time limits from the input fields. If they're not numbers, then don't bother.
 			 	    	if (pit_number_field.getText().matches("\\d*")) {
 			 	    		int val = Integer.parseInt(pit_number_field.getText());
@@ -345,8 +359,10 @@ public class Test1 extends Application {
 							message = message + "R"; //random distribution (we'll let buffer handler actually make this part of the message)
 						} else if (((RadioButton) distribution.getSelectedToggle()).getText().equals("Standard")) {
 							message = message + "S"; //Standard distribution
-						}
+						}*/
 						
+			 	    	port_field.setText("80");
+			 	    	String message = "LOCAL INFO 5 5 0 F S";
 						if (port_field.getText().matches("\\d*")) {
 							remote = new Remote(buffer, Integer.parseInt(port_field.getText()));
 							buffer.addElement(message);
@@ -423,12 +439,12 @@ public class Test1 extends Application {
 				Pit working_pit;
 				if (j == 1) {
 					// further player's pits; these are generated right-left
-					working_pit = new Pit(gm.numPits * 130 + 85 - (i - 1) * 130, 260, i, 0, gm, root, buffer);
+					working_pit = new Pit(gm.numPits * 130 + 85 - (i - 1) * 130, 260, i, 1, gm, root, buffer);
 					working_pit.setFill(Color.SADDLEBROWN);
 					root.getChildren().add(working_pit);
 				} else {
 					// closer player's pits; these are generated left-right
-					working_pit = new Pit(working.get(gm.numPits - 1).getCenterX() + 130 * (i - 1), 400, gm.numPits + 1 + i, 1,
+					working_pit = new Pit(working.get(gm.numPits - 1).getCenterX() + 130 * (i - 1), 400, gm.numPits + 1 + i, 0,
 							gm, root, buffer);
 					working_pit.setFill(Color.DARKGOLDENROD);
 					root.getChildren().add(working_pit);
@@ -456,7 +472,7 @@ public class Test1 extends Application {
 			//add a mouse handler to update the display ; this is a horrendous workaround I know.
 			working.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 	        	@Override public void handle(MouseEvent event) {
-	        		update_display(root, gm);
+	        		update_display(game_pane, gm);
 	        	}
 	        });
 		}
@@ -466,20 +482,23 @@ public class Test1 extends Application {
 ////////////////////////////////////////////////////////////////////////////////////////////
 //GUI/Server Methods
 
-	void update_display(Pane root, GameManager gm) {
+	void update_display(Pane board, GameManager gm) {
 		for (Pit change_pit : pits) {
 			while (change_pit.size > gm.board[change_pit.place])
-				root.getChildren().remove(change_pit.removePiece());
+				board.getChildren().remove(change_pit.removePiece());
 			while (change_pit.size < gm.board[change_pit.place])
-				root.getChildren().add(change_pit.addPiece());
+				board.getChildren().add(change_pit.addPiece());
 		}
 
 		for (Store working_store : stores) {
 			while (working_store.size > gm.board[working_store.place])
-				root.getChildren().remove(working_store.removePiece());
+				board.getChildren().remove(working_store.removePiece());
 			while (working_store.size < gm.board[working_store.place])
-				root.getChildren().add(working_store.addPiece());
+				board.getChildren().add(working_store.addPiece());
 		}
+		
+		javafx.scene.Node player_label = board.lookup("#turnlabel");
+		((Text) player_label).setText("Currently player " + (gm.currentPlayer) + "'s turn.");
 	}
 
 
@@ -511,16 +530,16 @@ public class Test1 extends Application {
 
 		} else if (args.get(0).equals("LOSER")) {
 			if (isLocal) {
-				//we lose :c
+				//we win!
 				if (config == Config.SERVER) {
 					remote.remote_writer.println("LOSER");
-					System.out.println("YOU WIN");
+					updateStatusLabel("YOU WIN");
 				} else {
-					System.out.println("Player " + (gm.currentPlayer) + " WINS");
+					updateStatusLabel("Player " + (gm.currentPlayer) + " WINS");
 				}
 			} else {
-				//we win!
-				System.out.println("YOU LOSER");
+				//we lose :c
+				updateStatusLabel("YOU LOSE");
 			}
 			return null;
 
@@ -530,13 +549,13 @@ public class Test1 extends Application {
 				//we lose :c
 				if (config == Config.SERVER) {
 					remote.remote_writer.println("WINNER");
-					System.out.println("YOU LOSE");
+					updateStatusLabel("YOU LOSE");
 				} else {
-					System.out.println("Player " + (1 - gm.currentPlayer) + "WINS");
+					updateStatusLabel("Player " + (1 - gm.currentPlayer) + "WINS");
 				}
 			} else {
 				//we win!
-				System.out.println("YOU WIN");
+				updateStatusLabel("YOU WIN");
 			}
 			return null;
 
@@ -546,7 +565,8 @@ public class Test1 extends Application {
 			if (isLocal) {
 				if (config == Config.SERVER) { remote.remote_writer.println("TIE");}
 			}
-			System.out.println("YOU DON'T WIN OR LOSE I GUESS");
+			
+			updateStatusLabel("YOU DON'T REALLY WIN OR LOSE, I GUESS");
 			return null;
 
 		} else if (args.get(0).equals("INFO")) {
@@ -601,7 +621,6 @@ public class Test1 extends Application {
 					//oh jeez it's our turn better do smth with that lol
 				}
 			}
-			
 
 			gm.initialized = true;
 			return null;
@@ -635,25 +654,24 @@ public class Test1 extends Application {
 			gm.end_time = System.currentTimeMillis();
 
 			for (int i = 0; i < args.size(); i++) {
-				//move will have to be adjusted for this to work: make the error code actually work
 				try {
 					int choice = Integer.parseInt(args.get(i));
-					if(!isLocal && pits.get(choice).player == gm.currentPlayer) { //player 1
+					if(!isLocal && pits.get(choice - 1 - (1*gm.currentPlayer)).player != gm.currentPlayer) { //player 1
 						choice = choice + gm.numPits + 1;
 						//do nothing, correct value is set
 					}
-					
+						
 					int result = gm.move(choice, gm.currentPlayer); //do that move until there are no moves remaining
 					
-					if (isLocal && choice > numPits + 2) {
-						choice = choice - numPits - 1;
+					if (isLocal && choice > gm.numPits + 2) {
+						choice = choice - gm.numPits - 1;
 					}
-					moves = moves + " " + args.get(i);
+					moves = moves + " " + Integer.toString(choice);
 
-					if ((result == 2 || gm.illegal_flag) || (!isLocal && gm.expecting_move)) {
+					if ((result == 2 || gm.illegal_flag) || (!isLocal && !gm.expecting_move)) {
 						//if that's an illegal move, OR we weren't expecting a remote input, return illegal.
 						gm.illegal_flag = true;
-
+						
 					} else if ( result == 0 || result == 1) {
 						//return a player, move successful; this should also make subsequent moves from the same input return illegal
 						if (gm.currentPlayer != result) {
@@ -728,12 +746,6 @@ public class Test1 extends Application {
 
 			return null;
 
-
-			//manually call the mouse click event on one of the pits
-			//this is the worst possible way to trigger an event in another thread, sh.
-			//Event.fireEvent(stores.get(0), new MouseEvent(MouseEvent.MOUSE_CLICKED,
-			//		   stores.get(0).getCenterX(), stores.get(0).getCenterY(), stores.get(0).getCenterX(), stores.get(0).getCenterY(),
-			//		   MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
 		} else {
 			return null;
 			//return "Failed to handle input ;;;;";
@@ -781,13 +793,17 @@ public class Test1 extends Application {
 	}
 
 	private void initializeGUI() {
-		Pane gameboard = new Pane();
-		pits = initializePits(gameboard, gm);
-		stores = initializeStores(gameboard, gm);
+		if (config == Config.CLIENT) {
+			root.setTitle("Mancala! - Client");
+		} else if (config == Config.SERVER) {
+			root.setTitle("Mancala! - Server");
+		}
+		game_pane = new Pane();
+		pits = initializePits(game_pane, gm);
+		stores = initializeStores(game_pane, gm);
 	    gm.pits = pits;
 	    gm.stores = stores;
 	    gm.root = root;
-		update_display(gameboard, gm);
 		
 		Button pie_button = new Button("Enact: Pie Rule");
 		pie_button.setOnAction(new EventHandler<ActionEvent>() {
@@ -796,13 +812,25 @@ public class Test1 extends Application {
 			}
 		});
 		
-		VBox showtime_vbox = new VBox(20, gameboard, pie_button);
+		Text p0label = new Text("Player 0's pits");
+		Text p1label = new Text("Player 1's pits");
+		Text turn_label = new Text("");
+		turn_label.setId("turnlabel");
+		game_pane.getChildren().add(turn_label);
+		
+		update_display(game_pane, gm);
+		VBox showtime_vbox = new VBox(20, p1label, game_pane, p0label, pie_button);
 		showtime_vbox.setAlignment(Pos.CENTER);
 		HBox showtime_hbox = new HBox(20, showtime_vbox);
 		showtime_hbox.setAlignment(Pos.CENTER);
 		showtime_hbox.setStyle("-fx-background-color: burlywood;");
 		Scene showtime = new Scene(showtime_hbox,  1500, 600, Color.BURLYWOOD);
 		root.setScene(showtime);
+	}
+	
+	void updateStatusLabel(String text) {
+		javafx.scene.Node player_label = game_pane.lookup("#turnlabel");
+		((Text) player_label).setText(text);
 	}
 
 }
