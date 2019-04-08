@@ -112,7 +112,9 @@ public class Test1 extends Application {
 		Scene opener_one = new Scene(opener_one_vbox, 720, 720, Color.BURLYWOOD);
 		root.setScene(opener_one);
 		
-
+////////////////////////////////////////////////////////////////////////////////////
+//Opener stage 2 local
+		
 		local_button.setOnAction(new EventHandler<ActionEvent>() {
 	 	    @Override public void handle(ActionEvent e) {
 				config = Config.LOCAL;
@@ -120,15 +122,15 @@ public class Test1 extends Application {
 				GridPane opener_two_grid = createGrid();
 				
 				//create 1st set of radio buttons
-				final ToggleGroup player1 = createRadioButtons(opener_two_grid, 0, "Human", "Computer", "Player 1");
-				final ToggleGroup player2 = createRadioButtons(opener_two_grid, 1, "Human", "Computer", "Player 2");
+				final ToggleGroup player1 = createRadioButtons(opener_two_grid, 0, "Human", "Computer", "Player 0");
+				final ToggleGroup player2 = createRadioButtons(opener_two_grid, 1, "Human", "Computer", "Player 1");
 											
 				TextField pit_number_field = createInputField(opener_two_grid, 2, "# of pits on each side");
 				TextField piece_number_field = createInputField(opener_two_grid, 3, "Average # of pieces in pits");
 				TextField time_limit_field = createInputField(opener_two_grid, 4, "Time limit / move ; 0 -> no limit");
 				
 				final ToggleGroup distribution = createRadioButtons(opener_two_grid, 5, "Random", "Standard", "Distribution of pieces");
-				final ToggleGroup first = createRadioButtons(opener_two_grid, 6, "Player 1", "Player 2", "Who goes first?");
+				final ToggleGroup first = createRadioButtons(opener_two_grid, 6, "Player 0", "Player 1", "Who goes first?");
 				Button play_button = new Button("Play mancala!!");
 				GridPane.setConstraints(play_button, 1, 7, 1, 1);
 				
@@ -172,7 +174,7 @@ public class Test1 extends Application {
 			 	    		gm.playerInputs[0] = Source.HUMAN;
 			 	    	} else if (((RadioButton) player1.getSelectedToggle()).getText().equals("Computer")) {			
 			 	    		gm.playerInputs[0] = Source.AI;
-			 	    	}
+			 	    	} else { return;}
 			 	    	
 						if (((RadioButton) player2.getSelectedToggle()) == null) {
 							return;
@@ -180,7 +182,7 @@ public class Test1 extends Application {
 							gm.playerInputs[1] = Source.HUMAN;
 						} else if (((RadioButton) player2.getSelectedToggle()).getText().equals("Computer")) {
 							gm.playerInputs[1] = Source.AI;
-						}
+						} else { return;}
 						
 						if (((RadioButton) first.getSelectedToggle()) == null) {
 							return;
@@ -188,7 +190,7 @@ public class Test1 extends Application {
 							message = message + "F "; //whoever's receiving this goes second
 						} else if (((RadioButton) first.getSelectedToggle()).getText().equals("Player 0")) {
 							message = message + "S "; //whoever's receiving this goes first
-						}
+						} else { return;}
 						
 						if (((RadioButton) distribution.getSelectedToggle()) == null) {
 							return;
@@ -196,7 +198,7 @@ public class Test1 extends Application {
 							message = message + "R"; //random distribution (we'll let buffer handler actually make this part of the message)
 						} else if (((RadioButton) distribution.getSelectedToggle()).getText().equals("Standard")) {
 							message = message + "S"; //Standard distribution
-						}
+						} else { return;}
 						buffer.addElement(message);
 
 						initializeGUI();
@@ -204,7 +206,10 @@ public class Test1 extends Application {
 				});
 			}
 		});
-		
+				
+////////////////////////////////////////////////////////////////////////////////////
+//Opener stage 2 client
+
 		remote_client_button.setOnAction(new EventHandler<ActionEvent>() {
 			@Override public void handle(ActionEvent e) {
 				config = Config.CLIENT;
@@ -237,6 +242,7 @@ public class Test1 extends Application {
 				//run the other thing
 				
 			
+
 				play_button.setOnAction(new EventHandler<ActionEvent>() {
 					@Override public void handle(ActionEvent e) {
 						if (((RadioButton) player2.getSelectedToggle()) == null) {
@@ -280,6 +286,9 @@ public class Test1 extends Application {
 			}
 		});
 		
+		
+////////////////////////////////////////////////////////////////////////////////////
+//Opener stage 2 server
 		remote_server_button.setOnAction(new EventHandler<ActionEvent>() {
 			@Override public void handle(ActionEvent e) {
 				config = Config.SERVER;
@@ -356,12 +365,11 @@ public class Test1 extends Application {
 							message = message + "S"; //Standard distribution
 						}
 						
-			 	    	port_field.setText("80");
 						if (port_field.getText().matches("\\d*")) {
-							remote = new Remote(buffer, Integer.parseInt(port_field.getText()));
+							//remote = new Remote(buffer, Integer.parseInt(port_field.getText()));
+							pool.execute(remote);
 							buffer.addElement(message);
 							initializeGUI();
-							pool.execute(remote);
 						} else {return;}
 			 	    }
 				});
@@ -369,9 +377,6 @@ public class Test1 extends Application {
 		});
 
 	}   //end start
-	
-	
-
 	
 	
 	////////////////////////////////////////////////////////////////////////////////////////////
@@ -395,6 +400,12 @@ public class Test1 extends Application {
 			// what happens when something is added to list?
 			// peel off first item, split it
 
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			String message = target.get(0);
 			while (message != null) {
 				//split the string into an array, slot that array into a vector
@@ -407,7 +418,6 @@ public class Test1 extends Application {
 
 				message = handleInput(args, isLocal);
 			}
-			target.remove(0);
 
 		}
 
@@ -490,16 +500,25 @@ public class Test1 extends Application {
 				board.getChildren().add(working_store.addPiece());
 		}
 		
-		javafx.scene.Node player_label = board.lookup("#turnlabel");
-		((Text) player_label).setText("Currently player " + (gm.currentPlayer) + "'s turn.");
+		if(!gm.GUI_initialized) {initializeGUI();}
+		try {
+			javafx.scene.Node player_label = board.lookup("#turnlabel");
+			((Text) player_label).setText("Currently player " + (gm.currentPlayer) + "'s turn.");
+		} catch (NullPointerException e) {
+			//I have been trying to fix this for 4 hours. I can't thnk of a workaround, so whatever.
+			//do nothing!
+		}
 	}
 
 
 ////////////////////////////////////////////////////////////////////////////////////
 //Buffer input Handling
+	
 	private String handleInput(Vector<String> args, Boolean isLocal) {
 		//handle the input! A massive, sprawling if/else tree. how terrible!
-
+		if (buffer.getSize() > 0) {
+			buffer.remove(0);
+		}
 		if (args.get(0).equals("WELCOME")){
 			System.out.println("Server connected.");
 			return null;
@@ -508,8 +527,10 @@ public class Test1 extends Application {
 			gm.start_time = System.currentTimeMillis();
 			gm.expecting_move = true;
 			if (gm.playerInputs[gm.currentPlayer] == Source.AI) {
-				//If our AI is the current player, notify it to start doing things.
-				//this SHOULD only come up if we receive READY and are first.
+				//make the AI do the thing.
+				Tree tree = new Tree(gm.board, gm.currentPlayer, gm);
+				int selection = tree.bestNextMove();	
+				buffer.addElement("LOCAL " + Integer.toString(selection));
 			}
 			return null;
 
@@ -572,9 +593,6 @@ public class Test1 extends Application {
 				//client goes first
 				gm.currentPlayer = 1;
 			} else if (args.get(4).equals("S")) {
-				//THIS MAY OR MAY NOT FUNCTION AS IT SHOULD. REALLY COULDN'T TELL YA. YET
-				//TODO verify
-				//server goes first
 				gm.currentPlayer = 0;
 			}
 
@@ -583,8 +601,8 @@ public class Test1 extends Application {
 				gm.board = new GameManager(gm.numPits, gm.numPieces).board;
 			} else if (args.get(5).equals("R")) {
 				//random config
-				//TODO THIS ISN'T REALLY DONE LOL
 				if (isLocal) {
+					//send the config we have to the client
 					gm.board = new GameManager(gm.numPits, gm.numPieces).board;
 					gm.randomPieces();
 					if (config == Config.SERVER) {
@@ -592,13 +610,12 @@ public class Test1 extends Application {
 							args.addElement(Integer.toString(gm.board[i+1]));
 						}
 					}
-					//send modified message to client
 				} else {
 					//set the board like the server did 
-					for (int i = 0; i < gm.numPits; i++) {
-						gm.board = new GameManager(gm.numPits, gm.numPieces).board;
-						gm.board[i+1] = Integer.parseInt(args.get(6+i));
-						gm.board[i + numPits + 2] = Integer.parseInt(args.get(6+i));
+					gm.board = new GameManager(gm.numPits, gm.numPieces).board;
+					for (int i = 1; i <= gm.numPits; i++) {
+						gm.board[i] = Integer.parseInt(args.get(5+i));
+						gm.board[i + numPits + 2] = Integer.parseInt(args.get(5+i));
 					}
 				}
 			}
@@ -607,19 +624,35 @@ public class Test1 extends Application {
 				String out = "";
 				for (int i = 0; i < args.size(); i++) {out = out + " " + args.elementAt(i);}
 				out = out.substring(1); //remove first space
-				remote.store = out; //send to remote once we have it up and running.
+				remote.remote_writer.println(out); //send to remote once we have it up and running.
+				gm.initialized = true;
+				initializeGM();
+				return null;
 			} else if (config != Config.LOCAL) {
 				remote.remote_writer.println("READY");
 				if (gm.playerInputs[gm.currentPlayer] != Source.REMOTESERVER ) {
-					//oh jeez it's our turn better do smth with that lol
+					Tree tree = new Tree(gm.board, gm.currentPlayer, gm);
+					int selection = tree.bestNextMove();
+					buffer.addElement("LOCAL " + Integer.toString(selection));
 				}
+				initializeGM();
+				return null;
+			} 
+			
+			if (gm.playerInputs[gm.currentPlayer] == Source.AI) {
+				Tree tree = new Tree(gm.board, gm.currentPlayer, gm);
+				int selection = tree.bestNextMove();	
+				initializeGM();
+				buffer.addElement("LOCAL " + Integer.toString(selection));
 			}
 
 			gm.initialized = true;
+			initializeGM();
 			return null;
 
 		} else if (args.get(0).equals("P")) {
 			// pie rule
+			 
 			if (gm.moveNumber == 1) {
 				//if this is second move in game, do pie rule
 				gm.moveNumber += 1;
@@ -638,24 +671,33 @@ public class Test1 extends Application {
 				remote.remote_writer.println("P");
 				gm.acknowledged = false;
 			}
+			
 			return null;
 
+			
 		} else if (args.get(0).matches("^[0-9]*$")) {
 			//if our first character is a number, then we do a regular ol' move.
 			String moves = "";
 
 			gm.end_time = System.currentTimeMillis();
-
+			initializeGM();
+			
 			for (int i = 0; i < args.size(); i++) {
 				try {
 					int choice = Integer.parseInt(args.get(i));
-					if(!isLocal && pits.get(choice - 1 - (1*gm.currentPlayer)).player != gm.currentPlayer) { //player 1
-						choice = choice + gm.numPits + 1;
-						//do nothing, correct value is set
+					
+					//our board is set up different from the requirements, so this requires adjustment
+					try {
+						if(!isLocal && pits.get(choice - 1 - (1*gm.currentPlayer)).player != gm.currentPlayer) { //player 1
+							choice = choice + gm.numPits + 1;
+						}
+					} catch (ArrayIndexOutOfBoundsException e) {
+						//sometimes that happens. don't do anything with this.
 					}
-						
+					
 					int result = gm.move(choice, gm.currentPlayer); //do that move until there are no moves remaining
 					
+					//our board is set up different from the requirements, so this requires adjustment
 					if (isLocal && choice > gm.numPits + 2) {
 						choice = choice - gm.numPits - 1;
 					}
@@ -721,22 +763,24 @@ public class Test1 extends Application {
 						remote.remote_writer.println("OK");
 					}
 				}
-			}
-
-			if (config == Config.CLIENT) {
+			} else if (config == Config.CLIENT) {
 				if (isLocal) {
 					//Send our move out to the server.
 					remote.remote_writer.println(moves);
 				} else {
 					//notify our AI to start its next move, otherwise nothing.
 					remote.remote_writer.println("OK");
+					if (gm.playerInputs[gm.currentPlayer] == Source.AI ) {
+					}
 				}
+			} 
+			
+			if (gm.playerInputs[gm.currentPlayer] == Source.AI ) {
+				Tree tree = new Tree(gm.board, gm.currentPlayer, gm);
+				int selection = tree.bestNextMove();	
+				buffer.addElement("LOCAL " + Integer.toString(selection));
 			}
-
-			if (gm.playerInputs[gm.currentPlayer] == Source.AI) {
-				//if the current player is our AI, signal the AI to move.
-			}
-
+			
 			return null;
 
 		} else {
@@ -784,20 +828,24 @@ public class Test1 extends Application {
 		grid.getChildren().add(pit_number_field);
 		return pit_number_field;
 	}
-
-	private void initializeGUI() {
-		if (config == Config.CLIENT) {
-			root.setTitle("Mancala! - Client");
-		} else if (config == Config.SERVER) {
-			root.setTitle("Mancala! - Server");
-		}
+	
+	private void initializeGM() {
 		game_pane = new Pane();
 		pits = initializePits(game_pane, gm);
 		stores = initializeStores(game_pane, gm);
 	    gm.pits = pits;
 	    gm.stores = stores;
 	    gm.root = root;
+	}
+	
+	private void initializeGUI() {
+		if (config == Config.CLIENT) {
+			root.setTitle("Mancala! - Client");
+		} else if (config == Config.SERVER) {
+			root.setTitle("Mancala! - Server");
+		}
 		
+		initializeGM();
 		Button pie_button = new Button("Enact: Pie Rule");
 		pie_button.setOnAction(new EventHandler<ActionEvent>() {
 			@Override public void handle(ActionEvent e) {
@@ -811,7 +859,6 @@ public class Test1 extends Application {
 		turn_label.setId("turnlabel");
 		game_pane.getChildren().add(turn_label);
 		
-		update_display(game_pane, gm);
 		VBox showtime_vbox = new VBox(20, p1label, game_pane, p0label, pie_button);
 		showtime_vbox.setAlignment(Pos.CENTER);
 		HBox showtime_hbox = new HBox(20, showtime_vbox);
@@ -819,11 +866,17 @@ public class Test1 extends Application {
 		showtime_hbox.setStyle("-fx-background-color: burlywood;");
 		Scene showtime = new Scene(showtime_hbox,  1500, 600, Color.BURLYWOOD);
 		root.setScene(showtime);
+		gm.GUI_initialized = true;
+		update_display(game_pane, gm);
 	}
 	
-	void updateStatusLabel(String text) {
+	private void updateStatusLabel(String text) {
+		try {if(!gm.GUI_initialized) {initializeGUI();}
 		javafx.scene.Node player_label = game_pane.lookup("#turnlabel");
 		((Text) player_label).setText(text);
+		} catch (NullPointerException e) {
+			game_pane.getChildren().add(new Text(text));
+		}
 	}
 
 }
