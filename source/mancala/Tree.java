@@ -1,17 +1,21 @@
 package mancala;
  import java.util.ArrayList;
-/* public class Tree {
+import java.util.Random;
+ public class Tree {
 	Node root;
-	//Node currentNode;
-	//ArrayList<Node> children = new ArrayList<Node>();
+	Node currentNode;
+	ArrayList<Node> children = new ArrayList<Node>();
+	GameManager gm;
 	int maxDepth = 7;
- 	Tree(int[] board, int player){  //constructor
+	static Random key = new Random();
+ 	Tree(int[] board, int player, GameManager _gm){  //constructor
 		root = new Node(board, player, 0);
 		createChildren(root);
+		gm = _gm;
 		//print(root);
 	}
 
- 	void createChildren(Node currentNode) {
+ 	/*void createChildren(Node currentNode) {
 		if(currentNode.playerWon == 0){  //player wins
  		}
 		else if(currentNode.playerWon == 1){	//AI wins
@@ -25,9 +29,9 @@ package mancala;
 				}
 			}
 		}
-	}
+	}*/
 
- 	/*
+ 	
  	void createChildren(Node node) {
  		currentNode = node;
 		if(currentNode.playerWon == 0){  //player wins
@@ -66,7 +70,7 @@ package mancala;
 		child.move(move);
 		return child;
 	}
- 	*/
+ 	
  	int bestNextMove() {
  		int bestMove = -1;
  		int bestScore;
@@ -75,7 +79,7 @@ package mancala;
 
  		//System.out.println("root node child size: " + node.children.size());
 
- 		if(node.player == 0) { //next move is player 1s
+ 		if(node.player == 1) { //next move is player 1s
  			bestScore = -10000;
 	 		for(int i = 0; i < node.children.size(); i++) {
 	 		//	System.out.println("p1 move " + node.moves.get(i) + " score is " + node.children.get(i).p1Score);
@@ -87,7 +91,7 @@ package mancala;
 	 		}
 
  		}
- 		if(node.player == 1) { //next move is player 2s
+ 		if(node.player == 0) { //next move is player 2s
  			bestScore = -10000;
 	 		for(int i = 0; i < node.children.size(); i++) {
 	 	//		System.out.println("p2 move " + node.moves.get(i) + " score is " + node.children.get(i).p1Score);
@@ -99,8 +103,16 @@ package mancala;
 	 		}
 
  		}
- 		return node.moves.get(bestMove);
-
+ 		int out;
+ 		try {
+ 			out = node.moves.get(bestMove); 
+ 		} catch (ArrayIndexOutOfBoundsException e) {
+ 			out = 0;
+ 		}
+ 		while (!gm.legalMove(out,  gm.currentPlayer)) {
+ 			out = key.nextInt(gm.numPits * 2 + 2);
+ 		}
+ 		return out;
  	}
 
 

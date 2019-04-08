@@ -75,14 +75,18 @@ public class Remote implements Runnable {
 				remote_writer = new PrintWriter(remoteSocket.getOutputStream(), true);
 				remote_reader = new BufferedReader( new InputStreamReader(remoteSocket.getInputStream()));
 				remote_writer.println("WELCOME");
-				remote_writer.println(store);
+				Thread.sleep(100);
 				System.out.println("Client Connected.");
 			} else {
 				remote_writer = new PrintWriter(remoteSocket.getOutputStream(), true);
 				remote_reader = new BufferedReader( new InputStreamReader(remoteSocket.getInputStream()));
+				
 			}
 		} catch (IOException e) {
 			System.out.println("remote creation failed.");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		String inputLine;

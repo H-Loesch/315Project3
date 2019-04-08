@@ -30,6 +30,7 @@ public class GameManager {
 	long start_time; //time acknowledgement is received
 	long end_time;  //time move is received
 	Boolean initialized = false;
+	Boolean GUI_initialized = false;
 	Boolean expecting_move = true; //are we currently expecting a move from someone?
 	Boolean illegal_flag = false;
 	Boolean acknowledged = false; //have we received an OK for the latest move
@@ -149,9 +150,9 @@ public class GameManager {
 			}
 		}
 
-		if(!legalMove) {
+		/*if(!legalMove) {
 			System.out.println("Illegal Move!!!");
-		}
+		}*/
 		return legalMove;
 
 	}
@@ -196,13 +197,9 @@ public class GameManager {
 						board[opposite] = 0;				//set gathered pit's marble to 0
 						board[move] = 0;
 						board[0] += marblesWon;   		//adds marbles won to player's kala
+						return 1;
 					}
 				}
-				//switch players
-				if(player == 0)
-					player = 1;
-				else
-					player = 0;
 			}
 		}
 
@@ -229,13 +226,9 @@ public class GameManager {
 						board[opposite] = 0;				//set gathered pit's marble to 0
 						board[move] = 0;
 						board[numPits+1] += marblesWon;   		//adds marbles won to player's kala
+						return 0;
 					}
 				}
-				//switch players
-				if(player == 0)
-					player = 1;
-				else
-					player = 0;
 			}
 		}
 		if(!playerHasStones() || !computerHasStones()) {
@@ -278,8 +271,8 @@ public class GameManager {
 
 	int findWinner() { //0 player 1 AI
 
-		System.out.println("Player 1's score: " + board[0]);
-		System.out.println("AI's score: " + board[numPits+1]);
+		System.out.println("Player 0's score: " + board[0]);
+		System.out.println("Player 1's score: " + board[numPits+1]);
 		if(board[0] > board[numPits+1])		//player wins
 			return 3;
 		else if(board[numPits+1] > board[0])	//AI wins

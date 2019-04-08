@@ -52,7 +52,7 @@ import java.util.*;
 		}
 	}
 
- /*
+ 
  	void validMoves() {  //returns list of valid moves
 		if(player == 0) { //player's turn
 			for(int i = 1; i < size/2; i++) {
@@ -69,7 +69,7 @@ import java.util.*;
 			}
 		}
 	}
- 	*/
+ 	
  	void move(int selection) {
 		int grabbed = board[selection];
 		board[selection] = 0;		//remove marbles from pit
