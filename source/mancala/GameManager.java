@@ -49,11 +49,16 @@ public class GameManager {
 		System.out.println("Player's " + player + " turn");
 		
 		
-		
-		while(!legal) { //continues till legal move made
-			System.out.println("\ninput move: ");
-			selection = Integer.parseInt(scanner.next());   //get new input for move
-			legal = legalMove(selection);
+		if(player == 0) { //user's turn
+			while(!legal) { //continues till legal move made
+				System.out.println("\ninput move: ");
+				selection = Integer.parseInt(scanner.next());   //get new input for move
+				legal = legalMove(selection);
+			}
+		}
+		else {				//AI's turn
+			Tree tree = new Tree(board, player);
+			selection = tree.bestNextMove();
 		}
 		//legal move made
 		move(selection);
