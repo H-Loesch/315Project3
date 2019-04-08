@@ -13,9 +13,9 @@ public class GameManager {
 	
 	int currentPlayer = 0; // whose turn is it right now?
 	int localPlayer = 0; //which player is local? (it can also be both of them so whatever)
-	private Stage root; 
-	private Vector<Pit> pits;
-	private Vector<Store> stores;
+	public Stage root; 
+	public Vector<Pit> pits;
+	public Vector<Store> stores;
 
 	int winner = 0;
 	Scanner scanner = new Scanner(System.in);
@@ -97,11 +97,9 @@ public class GameManager {
 			board[i+numPits+1] = temp;
 		}
 		
+		//swap the player of all the pits. idk maybe that will help things. amybe it won't. who knows.
 		for (Pit change_pit : pits) {
-			while (change_pit.size > gm.board[change_pit.place])
-				root.getChildren().remove(change_pit.removePiece());
-			while (change_pit.size < gm.board[change_pit.place])
-				root.getChildren().add(change_pit.addPiece());
+			change_pit.player = 1 - change_pit.player;
 		}
 	}
 	

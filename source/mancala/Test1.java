@@ -88,8 +88,7 @@ public class Test1 extends Application {
 	}
 	
 	public void start(Stage primaryStage){
-	    
-		    //show the window
+		//show the window
 		root = primaryStage;
 		root.show();
 		// Set the stage title
@@ -512,12 +511,16 @@ public class Test1 extends Application {
 
 		} else if (args.get(0).equals("LOSER")) {
 			if (isLocal) {
-				// we win! (cuz we're sending the remote a loser message
-				remote.remote_writer.println("LOSER");
-				System.out.println("YOU WIN");
-			} else {
-				System.out.println("YOU LOSE");
 				//we lose :c
+				if (config == Config.SERVER) {
+					remote.remote_writer.println("LOSER");
+					System.out.println("YOU WIN");
+				} else {
+					System.out.println("Player " + (gm.currentPlayer) + " WINS");
+				}
+			} else {
+				//we win!
+				System.out.println("YOU LOSER");
 			}
 			return null;
 
@@ -525,8 +528,12 @@ public class Test1 extends Application {
 			//end game, display winner text
 			if (isLocal) {
 				//we lose :c
-				remote.remote_writer.println("WINNER");
-				System.out.println("YOU LOSE");
+				if (config == Config.SERVER) {
+					remote.remote_writer.println("WINNER");
+					System.out.println("YOU LOSE");
+				} else {
+					System.out.println("Player " + (1 - gm.currentPlayer) + "WINS");
+				}
 			} else {
 				//we win!
 				System.out.println("YOU WIN");
@@ -537,7 +544,7 @@ public class Test1 extends Application {
 			//end game, display tie text
 			//game ended in tie
 			if (isLocal) {
-				remote.remote_writer.println("TIE");
+				if (config == Config.SERVER) { remote.remote_writer.println("TIE");}
 			}
 			System.out.println("YOU DON'T WIN OR LOSE I GUESS");
 			return null;
@@ -569,13 +576,17 @@ public class Test1 extends Application {
 					gm.randomPieces();
 					if (config == Config.SERVER) {
 						for (int i = 0; i < gm.numPits; i++) {
-							
+							args.addElement(Integer.toString(gm.board[i+1]));
 						}
 					}
-					
 					//send modified message to client
 				} else {
 					//set the board like the server did 
+					for (int i = 0; i < gm.numPits; i++) {
+						gm.board = new GameManager(gm.numPits, gm.numPieces).board;
+						gm.board[i+1] = Integer.parseInt(args.get(6+i));
+						gm.board[i + numPits + 2] = Integer.parseInt(args.get(6+i));
+					}
 				}
 			}
 				
@@ -602,7 +613,7 @@ public class Test1 extends Application {
 				gm.moveNumber += 1;
 				gm.pieRule(); // oh I don't trust this function at all.
 			} else {
-				remote.remote_writer.println("ILLEGAL");
+				if (config != Config.LOCAL) {remote.remote_writer.println("ILLEGAL");}
 				if (isLocal) {
 					return "LOCAL WINNER";
 				} else {
@@ -773,9 +784,21 @@ public class Test1 extends Application {
 		Pane gameboard = new Pane();
 		pits = initializePits(gameboard, gm);
 		stores = initializeStores(gameboard, gm);
+	    gm.pits = pits;
+	    gm.stores = stores;
+	    gm.root = root;
 		update_display(gameboard, gm);
 		
-		HBox showtime_hbox = new HBox(20, gameboard);
+		Button pie_button = new Button("Enact: Pie Rule");
+		pie_button.setOnAction(new EventHandler<ActionEvent>() {
+			@Override public void handle(ActionEvent e) {
+				buffer.addElement("LOCAL P");
+			}
+		});
+		
+		VBox showtime_vbox = new VBox(20, gameboard, pie_button);
+		showtime_vbox.setAlignment(Pos.CENTER);
+		HBox showtime_hbox = new HBox(20, showtime_vbox);
 		showtime_hbox.setAlignment(Pos.CENTER);
 		showtime_hbox.setStyle("-fx-background-color: burlywood;");
 		Scene showtime = new Scene(showtime_hbox,  1500, 600, Color.BURLYWOOD);
