@@ -680,7 +680,6 @@ public class Test1 extends Application {
 			String moves = "";
 
 			gm.end_time = System.currentTimeMillis();
-			initializeGM();
 			
 			for (int i = 0; i < args.size(); i++) {
 				try {
