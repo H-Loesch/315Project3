@@ -146,7 +146,7 @@ public class Test1 extends Application {
 
 				play_button.setOnAction(new EventHandler<ActionEvent>() {
 			 	    @Override public void handle(ActionEvent e) {
-			 	    	/*String message = "LOCAL INFO ";
+			 	    	String message = "LOCAL INFO ";
 			 	    	//grab numPits, numPieces, and time limits from the input fields. If they're not numbers, then don't bother.
 			 	    	if (pit_number_field.getText().matches("\\d*")) {
 			 	    		int val = Integer.parseInt(pit_number_field.getText());
@@ -198,8 +198,7 @@ public class Test1 extends Application {
 							message = message + "S"; //Standard distribution
 						}
 						buffer.addElement(message);
-			 	    	*/
-						buffer.addElement("LOCAL INFO 5 5 5 F S");
+
 						initializeGUI();
 			 	    }
 				});
@@ -240,7 +239,7 @@ public class Test1 extends Application {
 			
 				play_button.setOnAction(new EventHandler<ActionEvent>() {
 					@Override public void handle(ActionEvent e) {
-						/*if (((RadioButton) player2.getSelectedToggle()) == null) {
+						if (((RadioButton) player2.getSelectedToggle()) == null) {
 							return;
 						} else if (((RadioButton) player2.getSelectedToggle()).getText().equals("Human")) {
 							gm.playerInputs[1] = Source.HUMAN;
@@ -265,14 +264,10 @@ public class Test1 extends Application {
 			 	    			//just... don't do anything. If this breaks probably everything else is too.
 			 	    		}
 			 	    	} else {return;}
-			 	    	*/
-						gm.playerInputs[1] = Source.HUMAN;
-						int port = 80;
-						String hostname = "TAMU-MACHINE-13";
-		 	    		remote = new Remote(buffer, port, hostname);
+			 	    	
 						try {
 		 	    			//we SHOULD be in the GUI thread when this runs. meaning that 
-		 	    			pool.execute(remote);
+							pool.execute(remote);
 		 	    			Thread.sleep(2000); //wait two seconds.
 		 	    			initializeGUI();
 		 	    			
@@ -318,7 +313,7 @@ public class Test1 extends Application {
 				
 				play_button.setOnAction(new EventHandler<ActionEvent>() {
 			 	    @Override public void handle(ActionEvent e) {
-			 	    	/*String message = "LOCAL INFO ";
+			 	    	String message = "LOCAL INFO ";
 			 	    	//grab numPits, numPieces, and time limits from the input fields. If they're not numbers, then don't bother.
 			 	    	if (pit_number_field.getText().matches("\\d*")) {
 			 	    		int val = Integer.parseInt(pit_number_field.getText());
@@ -359,10 +354,9 @@ public class Test1 extends Application {
 							message = message + "R"; //random distribution (we'll let buffer handler actually make this part of the message)
 						} else if (((RadioButton) distribution.getSelectedToggle()).getText().equals("Standard")) {
 							message = message + "S"; //Standard distribution
-						}*/
+						}
 						
 			 	    	port_field.setText("80");
-			 	    	String message = "LOCAL INFO 5 5 0 F S";
 						if (port_field.getText().matches("\\d*")) {
 							remote = new Remote(buffer, Integer.parseInt(port_field.getText()));
 							buffer.addElement(message);
@@ -404,7 +398,6 @@ public class Test1 extends Application {
 			String message = target.get(0);
 			while (message != null) {
 				//split the string into an array, slot that array into a vector
-				System.out.println(message);
 				Vector<String> args = new Vector<String>(Arrays.asList(message.split(" ")));
 
 				Boolean isLocal = args.get(0).equals("LOCAL");
