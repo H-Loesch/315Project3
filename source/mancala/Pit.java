@@ -81,7 +81,7 @@ public class Pit extends javafx.scene.shape.Circle{
         		if (gm.legalMove(place, gm.currentPlayer) && gm.playerInputs[gm.currentPlayer] == Source.HUMAN) {
         			//only allow pushing this to buffer if it's legal and it's actually your turn.
         			//also, let's preface it with LOCAL so that our input handler will know it's not from a remote source 
-        			buffer.addElement( "LOCAL " + Integer.toString(place));
+        			buffer.addElement( "LOCAL " + Integer.toString(place-(gm.currentPlayer*(gm.numPits+1))));
         		}
         	}
         });
