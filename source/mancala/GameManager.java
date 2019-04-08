@@ -6,14 +6,16 @@ import javafx.stage.Stage;
 
 import java.util.Random;
 import java.util.Scanner;
+import java.util.TimerTask;
+import java.util.Random;
 
 public class GameManager {
 
 	int[] board;
-	
+
 	int currentPlayer = 0; // whose turn is it right now?
 	int localPlayer = 0; //which player is local? (it can also be both of them so whatever)
-	public Stage root; 
+	public Stage root;
 	public Vector<Pit> pits;
 	public Vector<Store> stores;
 
@@ -21,17 +23,17 @@ public class GameManager {
 	Scanner scanner = new Scanner(System.in);
 	int numPits = 6; //number of pits on each side of the board
 	int numPieces = 4; //average number of pieces / pit
-	long timeLimit = 0; //time in milliseconds for each player to make a move 
+	long timeLimit = 0; //time in milliseconds for each player to make a move
 	int moveNumber; //home many moves have been made this game.
 	Source playerInputs[] = {Source.HUMAN, Source.HUMAN}; //Will contain our tw o players' sources. Defaults to 2-player local
-	
+
 	long start_time; //time acknowledgement is received
-	long end_time;  //time move is received 
+	long end_time;  //time move is received
 	Boolean initialized = false;
 	Boolean expecting_move = true; //are we currently expecting a move from someone?
 	Boolean illegal_flag = false;
 	Boolean acknowledged = false; //have we received an OK for the latest move
-	
+
 	//randomizes the existing board: does NOT create a new board, so if u've changed numPits or anything things'll be changed!
 	void randomPieces() {  //used to create a random distribution of pieces, uses numPieces for average number
 
@@ -54,14 +56,14 @@ public class GameManager {
 				board[j+1+numPits]=distro[j];
 			}
 		}
-		
+
 	}
 
 
 	GameManager() { //initializes board
 
 		 board = new int[(2*numPits)+2];
-				 
+
 		for(int i = 1; i < (2*numPits)+2; i++) { //skip player's kala at 0
 			if(i == numPits+1)
 				i++;			//skip AI's kala
@@ -73,8 +75,8 @@ public class GameManager {
 	//numPieces it set to absolute value of parameter
 	//this value is used as the average value for the pits
 	GameManager(int newPits, int newPieces) { //initializes board with values other that 6 pits and 4 pieces
-		
-		
+
+
 		numPits = newPits;
 		numPieces = Math.abs(newPieces);
 		board = new int[(2*numPits)+2];
@@ -90,19 +92,19 @@ public class GameManager {
 	}
 
 	void pieRule() {
-		
+
 		for(int i = 0; i <= numPits; i++) {
 			int temp = board[i];
 			board[i] = board[i+numPits+1];
 			board[i+numPits+1] = temp;
 		}
-		
+
 	}
-	
-	
+
+
 	void run() {
-		
-		
+
+
 		boolean legal = false;
 		int selection = 0;
 		print();
@@ -178,13 +180,13 @@ public class GameManager {
 				board[move] = board[move] + 1;
 				grabbed = grabbed - 1;
 			}
-			
+
 			System.out.println("Move ended on: " + move);
 			if(move == 0) { //landed in kala, go again
 				System.out.println("Go again!");
 				return 0;
 			}
-			
+
 			else {
 				if(move > numPits + 2) {  //on your side
 					if(board[move] == 1) { //empty pit
@@ -196,6 +198,11 @@ public class GameManager {
 						board[0] += marblesWon;   		//adds marbles won to player's kala
 					}
 				}
+				//switch players
+				if(player == 0)
+					player = 1;
+				else
+					player = 0;
 			}
 		}
 
@@ -224,6 +231,11 @@ public class GameManager {
 						board[numPits+1] += marblesWon;   		//adds marbles won to player's kala
 					}
 				}
+				//switch players
+				if(player == 0)
+					player = 1;
+				else
+					player = 0;
 			}
 		}
 		if(!playerHasStones() || !computerHasStones()) {
@@ -291,5 +303,4 @@ public class GameManager {
 		}
 		System.out.println();
 	}
-
 }
