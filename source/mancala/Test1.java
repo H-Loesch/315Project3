@@ -148,7 +148,7 @@ public class Test1 extends Application {
 
 				play_button.setOnAction(new EventHandler<ActionEvent>() {
 			 	    @Override public void handle(ActionEvent e) {
-			 	    	String message = "LOCAL INFO ";
+			 	    	/*String message = "LOCAL INFO ";
 			 	    	//grab numPits, numPieces, and time limits from the input fields. If they're not numbers, then don't bother.
 			 	    	if (pit_number_field.getText().matches("\\d*")) {
 			 	    		int val = Integer.parseInt(pit_number_field.getText());
@@ -199,8 +199,9 @@ public class Test1 extends Application {
 						} else if (((RadioButton) distribution.getSelectedToggle()).getText().equals("Standard")) {
 							message = message + "S"; //Standard distribution
 						}
-			 	    	
 						buffer.addElement(message);
+			 	    	*/
+						buffer.addElement("LOCAL INFO 5 5 5 F S");
 						initializeGUI();
 			 	    }
 				});
@@ -468,9 +469,9 @@ public class Test1 extends Application {
 
 	void update_display(Pane root, GameManager gm) {
 		for (Pit change_pit : pits) {
-			while (change_pit.size > gm.board[change_pit.place - change_pit.player])
+			while (change_pit.size > gm.board[change_pit.place])
 				root.getChildren().remove(change_pit.removePiece());
-			while (change_pit.size < gm.board[change_pit.place - change_pit.player])
+			while (change_pit.size < gm.board[change_pit.place])
 				root.getChildren().add(change_pit.addPiece());
 		}
 
@@ -566,11 +567,16 @@ public class Test1 extends Application {
 				if (isLocal) {
 					gm.board = new GameManager(gm.numPits, gm.numPieces).board;
 					gm.randomPieces();
+					if (config == Config.SERVER) {
+						for (int i = 0; i < gm.numPits; i++) {
+							
+						}
+					}
+					
 					//send modified message to client
 				} else {
 					//set the board like the server did 
 				}
-				gm.randomPieces();
 			}
 				
 			if (isLocal && config != Config.LOCAL) {
@@ -621,15 +627,16 @@ public class Test1 extends Application {
 				//move will have to be adjusted for this to work: make the error code actually work
 				try {
 					int choice = Integer.parseInt(args.get(i));
-					if(gm.currentPlayer==0) { //player 1
-						//do nothing, correct value is set
-					}
-					else { //player 2
-						//move choice to player 2s side of board
+					if(!isLocal && pits.get(choice).player == gm.currentPlayer) { //player 1
 						choice = choice + gm.numPits + 1;
+						//do nothing, correct value is set
 					}
 					
 					int result = gm.move(choice, gm.currentPlayer); //do that move until there are no moves remaining
+					
+					if (isLocal && choice > numPits + 2) {
+						choice = choice - numPits - 1;
+					}
 					moves = moves + " " + args.get(i);
 
 					if ((result == 2 || gm.illegal_flag) || (!isLocal && gm.expecting_move)) {

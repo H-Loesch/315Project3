@@ -1,6 +1,9 @@
 package mancala;
 
 import java.util.Vector;
+
+import javafx.stage.Stage;
+
 import java.util.Random;
 import java.util.Scanner;
 
@@ -10,6 +13,9 @@ public class GameManager {
 	
 	int currentPlayer = 0; // whose turn is it right now?
 	int localPlayer = 0; //which player is local? (it can also be both of them so whatever)
+	private Stage root; 
+	private Vector<Pit> pits;
+	private Vector<Store> stores;
 
 	int winner = 0;
 	Scanner scanner = new Scanner(System.in);
@@ -36,12 +42,17 @@ public class GameManager {
 		for(int k = 0; k < numPits; k++) {
 			distro[k]=1;
 		}
-		for(int i = 0; i < numPits*(numPieces-1); i++) {
+		for(int i = 1; i < numPits*(numPieces-1); i++) {
 			distro[Math.abs(rnd.nextInt()%numPits)]++;
 		}
 		for(int j = 0; j < numPits; j++) {
-			board[j]=distro[j];
-			board[j+1+numPits]=distro[j];
+			if (j == 0) {
+				board[j] = 0;
+				board[numPits+1] = 0;
+			} else {
+				board[j]=distro[j];
+				board[j+1+numPits]=distro[j];
+			}
 		}
 		
 	}
@@ -85,7 +96,13 @@ public class GameManager {
 			board[i] = board[i+numPits+1];
 			board[i+numPits+1] = temp;
 		}
-
+		
+		for (Pit change_pit : pits) {
+			while (change_pit.size > gm.board[change_pit.place])
+				root.getChildren().remove(change_pit.removePiece());
+			while (change_pit.size < gm.board[change_pit.place])
+				root.getChildren().add(change_pit.addPiece());
+		}
 	}
 	
 	
@@ -118,7 +135,7 @@ public class GameManager {
 	boolean legalMove(int selection, int player) {
 		boolean legalMove = true;
 
-		if(board[selection] == 0 || selection > ((2*numPits)+2)-1) { //illegal move for any player (empty pit || out of bounds)
+		if(board[selection] == 0 || selection > ((2*numPits)+1)) { //illegal move for any player (empty pit || out of bounds)
 			legalMove = false;
 		}
 
@@ -126,12 +143,12 @@ public class GameManager {
 			legalMove = false;
 		}
 		if(player == 0) {
-			if(selection <= numPits+1) { //illegal move for player
+			if(selection >= numPits+1) { //illegal move for player
 				legalMove = false;
 			}
 		}
 		else {
-			if(selection > numPits) { //illegal move for computer
+			if(selection < numPits) { //illegal move for computer
 				legalMove = false;
 			}
 		}
