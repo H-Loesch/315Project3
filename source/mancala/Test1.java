@@ -366,7 +366,7 @@ public class Test1 extends Application {
 						}
 						
 						if (port_field.getText().matches("\\d*")) {
-							//remote = new Remote(buffer, Integer.parseInt(port_field.getText()));
+							remote = new Remote(buffer, Integer.parseInt(port_field.getText()));
 							pool.execute(remote);
 							buffer.addElement(message);
 							initializeGUI();
